@@ -1,0 +1,108 @@
+% == FILE: modules/module_tcl.tex ==
+% Module: Introduction to TCL (Tool Command Language)
+
+\subsection{Overview}
+This module introduces TCL (Tool Command Language), a powerful scripting language extensively used in Electronic Design Automation (EDA) tools and design flows. TCL enables automation, tool customization, and integration between multiple tools in the RTL-to-GDSII process.
+
+\subsection{Purpose in VLSI Design}
+TCL scripting allows designers to:
+\begin{itemize}
+  \item Automate repetitive commands in synthesis, place-and-route, and verification.
+  \item Interface multiple EDA tools in a unified flow.
+  \item Create parameterized design scripts for better reproducibility.
+  \item Modify and control tool environments dynamically.
+\end{itemize}
+
+\subsection{Basic TCL Commands and Syntax}
+TCL syntax is similar to many programming languages and includes constructs such as loops, conditionals, lists, and procedures.
+
+\subsubsection*{Example 1: Basic List Operations}
+\begin{lstlisting}[style=tclstyle]
+set List {0 1 2 3 4 5 6}
+set index -1
+foreach elem $List {
+  incr index
+  puts "Index: $index"
+  if {$elem % 2 == 0} {
+    lset List $index [expr {-$elem}]
+  }
+  puts "Updated list: $List"
+}
+\end{lstlisting}
+\textbf{Explanation:}
+\begin{itemize}
+  \item \textbf{set} – Defines a variable and assigns a value.
+  \item \textbf{foreach} – Iterates over each element in a list.
+  \item \textbf{incr} – Increments a numeric variable.
+  \item \textbf{puts} – Prints to the terminal.
+  \item \textbf{if} – Conditional check similar to other languages.
+  \item \textbf{lset} – Updates an element of a list at a given index.
+  \item \textbf{expr} – Evaluates an arithmetic expression.
+\end{itemize}
+
+\subsubsection*{Example 2: File Handling Commands}
+\begin{lstlisting}[style=tclstyle]
+set fp [open "input.txt" w+]
+puts $fp "test"
+close $fp
+
+set fp [open "input.txt" r]
+set file_data [read $fp]
+puts $file_data
+close $fp
+\end{lstlisting}
+\textbf{Explanation:}
+\begin{itemize}
+  \item \textbf{open} – Opens a file channel in a specific mode (read, write, append, etc.).
+  \item \textbf{close} – Closes the file channel.
+  \item \textbf{puts} – Writes data to a file or displays output.
+  \item \textbf{read} – Reads file contents into a variable.
+\end{itemize}
+
+\subsubsection*{Example 3: Procedures and Return Statements}
+\begin{lstlisting}[style=tclstyle]
+proc printSumProduct {x y} {
+  set sum [expr {$x + $y}]
+  set prod [expr {$x * $y}]
+  puts "Sum is : $sum"
+  puts "Product is : $prod"
+  return
+  puts "This line will not be printed"
+}
+
+puts [printSumProduct 10 50]
+\end{lstlisting}
+\textbf{Explanation:}
+\begin{itemize}
+  \item \textbf{proc} – Defines a reusable procedure or function.
+  \item \textbf{return} – Terminates execution and returns control to the caller.
+\end{itemize}
+
+\subsubsection*{Example 4: Executing System Commands}
+\begin{lstlisting}[style=tclstyle]
+puts [exec ls]
+puts [exec pwd]
+\end{lstlisting}
+\textbf{Explanation:}
+\begin{itemize}
+  \item \textbf{exec} – Executes external system commands within a TCL script.
+  \item In this example, the script lists directory contents and prints the current working directory.
+\end{itemize}
+
+\subsection{Running TCL Scripts}
+TCL scripts are saved with a \\texttt{.tcl} extension and executed using:
+\begin{lstlisting}[style=bashstyle]
+tclsh script_name.tcl
+\end{lstlisting}
+
+\subsection{Practical Usage in VLSI Flow}
+TCL is widely embedded in open-source and commercial tools such as Yosys, OpenROAD, Magic, and Synopsys tools. It is used to:
+\begin{itemize}
+  \item Configure design environments.
+  \item Execute synthesis and timing analysis scripts.
+  \item Generate reports automatically.
+  \item Manage flow automation pipelines.
+\end{itemize}
+
+\subsection{Summary}
+TCL scripting is a cornerstone of modern EDA automation. A clear understanding of its commands and structure is essential for customizing design flows and improving productivity in RTL-to-GDSII projects.

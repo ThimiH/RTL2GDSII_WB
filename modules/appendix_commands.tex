@@ -1,0 +1,346 @@
+% == FILE: modules/appendix_commands.tex ==
+% Appendix: Useful Commands and References
+
+\subsection{Unix/Linux Command Reference}
+
+\subsubsection{File and Directory Operations}
+\begin{lstlisting}[style=bashstyle]
+# List files with details
+ls -lah
+
+# Change directory
+cd /path/to/directory
+cd ..                # Go up one level
+cd ~                 # Go to home directory
+
+# Create directory
+mkdir -p path/to/directory
+
+# Copy files
+cp source.v destination.v
+cp -r source_dir/ dest_dir/
+
+# Move/rename files
+mv old_name.v new_name.v
+
+# Remove files/directories
+rm file.v
+rm -rf directory/
+
+# Find files
+find . -name "*.v"
+find . -type f -mtime -7  # Files modified in last 7 days
+
+# Search in files
+grep "module" *.v
+grep -r "always" design/
+\end{lstlisting}
+
+\subsubsection{System Information}
+\begin{lstlisting}[style=bashstyle]
+# Disk usage
+df -h
+du -sh directory/
+
+# Memory usage
+free -h
+
+# Process monitoring
+top
+htop
+ps aux | grep yosys
+
+# System information
+uname -a
+lsb_release -a
+\end{lstlisting}
+
+\subsection{Git Commands for Version Control}
+\begin{lstlisting}[style=bashstyle]
+# Initialize repository
+git init
+
+# Clone repository
+git clone https://github.com/user/repo.git
+
+# Check status
+git status
+
+# Add files
+git add design.v
+git add .
+
+# Commit changes
+git commit -m "Description of changes"
+
+# Push to remote
+git push origin main
+
+# Pull updates
+git pull
+
+# Create branch
+git checkout -b feature-branch
+
+# View commit history
+git log --oneline
+\end{lstlisting}
+
+\subsection{Icarus Verilog Commands}
+\begin{lstlisting}[style=bashstyle]
+# Compile Verilog files
+iverilog -o simulation design.v testbench.v
+
+# Run simulation
+vvp simulation
+
+# With specific timescale
+iverilog -g2005-sv -o sim design.sv testbench.sv
+
+# Generate VCD waveform
+vvp simulation -vcd
+
+# View waveform
+gtkwave waveform.vcd
+\end{lstlisting}
+
+\subsection{Yosys Synthesis Commands}
+\begin{lstlisting}[style=tclstyle]
+# Read Verilog
+read_verilog design.v
+
+# Synthesize
+synth -top module_name
+
+# Technology mapping
+dfflibmap -liberty library.lib
+abc -liberty library.lib
+
+# Write netlist
+write_verilog -noattr netlist.v
+
+# Generate reports
+stat
+check
+
+# Show schematic
+show
+\end{lstlisting}
+
+\subsection{OpenSTA Commands}
+\begin{lstlisting}[style=tclstyle]
+# Read liberty file
+read_liberty library.lib
+
+# Read netlist
+read_verilog netlist.v
+
+# Link design
+link_design top_module
+
+# Read SDC constraints
+read_sdc constraints.sdc
+
+# Report timing
+report_checks -path_delay min_max
+report_tns
+report_wns
+
+# Report power
+report_power
+\end{lstlisting}
+
+\subsection{OpenROAD Commands}
+\begin{lstlisting}[style=tclstyle]
+# Read LEF/DEF
+read_lef technology.lef
+read_def design.def
+
+# Floor planning
+initialize_floorplan \
+    -die_area "0 0 1000 1000" \
+    -core_area "10 10 990 990"
+
+# Placement
+global_placement
+detailed_placement
+
+# Clock tree synthesis
+clock_tree_synthesis -root_buf BUF_X1 \
+    -buf_list BUF_X1
+
+# Routing
+global_route
+detailed_route
+
+# Write output
+write_def output.def
+\end{lstlisting}
+
+\subsection{Magic VLSI Commands}
+\begin{lstlisting}[style=tclstyle]
+# Load technology
+tech load sky130A
+
+# Read GDS
+gds read design.gds
+
+# Read DEF
+def read design.def
+
+# Run DRC
+drc check
+drc why
+
+# Extract netlist
+extract all
+ext2spice lvs
+ext2spice
+
+# Write GDS
+gds write output.gds
+\end{lstlisting}
+
+\subsection{TCL Scripting Quick Reference}
+\begin{lstlisting}[style=tclstyle]
+# Variables
+set var_name value
+puts $var_name
+
+# Lists
+set my_list {item1 item2 item3}
+lindex $my_list 0
+llength $my_list
+lappend my_list item4
+
+# Control structures
+if {$a > $b} {
+    puts "a is greater"
+} else {
+    puts "b is greater"
+}
+
+foreach item $my_list {
+    puts $item
+}
+
+for {set i 0} {$i < 10} {incr i} {
+    puts $i
+}
+
+# Procedures
+proc my_proc {arg1 arg2} {
+    return [expr {$arg1 + $arg2}]
+}
+
+# File operations
+set fp [open "file.txt" r]
+set data [read $fp]
+close $fp
+\end{lstlisting}
+
+\subsection{Makefile Template}
+\begin{lstlisting}[style=bashstyle]
+# Makefile for RTL-to-GDSII flow
+
+DESIGN = top_module
+VERILOG_FILES = design.v
+TB_FILES = testbench.v
+LIB = library.lib
+
+# Simulation
+sim:
+	iverilog -o $(DESIGN).vvp $(VERILOG_FILES) $(TB_FILES)
+	vvp $(DESIGN).vvp
+	gtkwave waveform.vcd
+
+# Synthesis
+synth:
+	yosys -p "read_verilog $(VERILOG_FILES); \
+	         synth -top $(DESIGN); \
+	         dfflibmap -liberty $(LIB); \
+	         abc -liberty $(LIB); \
+	         write_verilog netlist.v"
+
+# Clean
+clean:
+	rm -f *.vvp *.vcd netlist.v *.log
+
+.PHONY: sim synth clean
+\end{lstlisting}
+
+\subsection{Online Resources}
+
+\subsubsection{Tool Documentation}
+\begin{itemize}
+  \item \textbf{Yosys:} \url{https://yosyshq.net/yosys/}
+  \item \textbf{OpenROAD:} \url{https://openroad.readthedocs.io/}
+  \item \textbf{Icarus Verilog:} \url{http://iverilog.icarus.com/}
+  \item \textbf{Magic:} \url{http://opencircuitdesign.com/magic/}
+  \item \textbf{SkyWater PDK:} \url{https://skywater-pdk.readthedocs.io/}
+\end{itemize}
+
+\subsubsection{Learning Resources}
+\begin{itemize}
+  \item \textbf{Verilog Tutorial:} \url{https://www.asic-world.com/verilog/}
+  \item \textbf{Digital Design:} \url{https://www.nandland.com/}
+  \item \textbf{VLSI Resources:} \url{https://vlsi.pro/}
+  \item \textbf{OpenLane:} \url{https://openlane.readthedocs.io/}
+\end{itemize}
+
+\subsubsection{Community Forums}
+\begin{itemize}
+  \item \textbf{Reddit r/FPGA:} \url{https://reddit.com/r/FPGA}
+  \item \textbf{Slack (SkyWater):} \url{https://skywater-pdk.slack.com/}
+  \item \textbf{Gitter (OpenROAD):} Open-source EDA discussions
+\end{itemize}
+
+\subsection{Common File Extensions}
+\begin{itemize}
+  \item \texttt{.v} -- Verilog source file
+  \item \texttt{.sv} -- SystemVerilog file
+  \item \texttt{.vcd} -- Value Change Dump (waveform)
+  \item \texttt{.lib} -- Liberty timing library
+  \item \texttt{.lef} -- Library Exchange Format (physical cells)
+  \item \texttt{.def} -- Design Exchange Format (placement data)
+  \item \texttt{.sdc} -- Synopsys Design Constraints (timing)
+  \item \texttt{.spice} -- SPICE netlist
+  \item \texttt{.gds} -- GDSII layout file
+  \item \texttt{.mag} -- Magic layout file
+  \item \texttt{.tcl} -- TCL script
+\end{itemize}
+
+\subsection{Troubleshooting Tips}
+
+\subsubsection{Simulation Issues}
+\begin{itemize}
+  \item Check for syntax errors in Verilog
+  \item Ensure testbench generates clock properly
+  \item Verify \$dumpfile and \$dumpvars are called
+  \item Use \$display for debugging
+\end{itemize}
+
+\subsubsection{Synthesis Issues}
+\begin{itemize}
+  \item Ensure Liberty file path is correct
+  \item Check for unmapped cells in netlist
+  \item Verify module names match between files
+  \item Review synthesis warnings carefully
+\end{itemize}
+
+\subsubsection{Physical Design Issues}
+\begin{itemize}
+  \item Verify LEF/DEF compatibility
+  \item Check floorplan dimensions
+  \item Ensure adequate power/ground routing
+  \item Review routing congestion reports
+\end{itemize}
+
+\subsection{Performance Optimization Tips}
+\begin{itemize}
+  \item Use incremental compilation when possible
+  \item Enable multi-threading in tools that support it
+  \item Optimize TCL scripts to reduce redundant operations
+  \item Use appropriate optimization flags in synthesis
+  \item Monitor system resources (RAM, disk I/O)
+\end{itemize}

@@ -1,0 +1,123 @@
+% == FILE: modules/module_hls.tex ==
+% Module: High-Level Synthesis (HLS) — Bambu (open-source example)
+
+\subsection{Overview}
+This module introduces High-Level Synthesis (HLS) and demonstrates using an open-source HLS tool (Bambu) to convert C/C++ behavioral descriptions into RTL (Verilog). HLS speeds up design exploration and lets you prototype hardware accelerators or compute kernels before hand-coding RTL.
+
+\subsection{Why use HLS}
+\begin{itemize}
+  \item Faster design space exploration — change algorithmic code and re-generate RTL quickly.
+  \item Easier expression of complex control and dataflow in C/C++/SystemC.
+  \item Good for generating hardware accelerators or data-path heavy modules.
+\end{itemize}
+
+\subsection{Installing Bambu (recommended on Ubuntu / WSL)}
+A minimal sequence to prepare an Ubuntu environment and run the Bambu AppImage:
+
+\begin{lstlisting}[style=bashstyle]
+# Update and install basic dependencies
+sudo apt-get update
+sudo apt-get install -y build-essential gcc-multilib git \
+    iverilog verilator wget
+
+# Download the Bambu AppImage 
+# (check bambu release page for latest version)
+wget https://release.bambuhls.eu/appimage/bambu-0.9.7.AppImage
+chmod +x bambu-0.9.7.AppImage
+
+# If AppImage needs FUSE on your platform:
+sudo add-apt-repository universe
+sudo apt-get install -y libfuse2
+\end{lstlisting}
+
+Verify installation by running:
+\begin{lstlisting}[style=bashstyle]
+./bambu-0.9.7.AppImage --help
+\end{lstlisting}
+
+\subsection{Basic usage example: GCD Algorithm}
+Throughout this workshop, we use the \textbf{Greatest Common Divisor (GCD)} as our golden thread example. This algorithm is ideal because it demonstrates both control flow (loops and conditionals) and datapath operations (subtraction and comparison), making it a realistic hardware design case.
+
+We start with a C implementation of Euclid's algorithm saved in \texttt{gcd.c}:
+
+\begin{lstlisting}[style=cstyle]
+// gcd.c
+void gcd(int a, int b, int *out) {
+    while (a != b) {
+        if (a > b)
+            a = a - b;
+        else
+            b = b - a;
+    }
+    *out = a;
+}
+\end{lstlisting}
+
+\textbf{Key Insight:} HLS will automatically generate the control logic for the \texttt{while} loop, creating a finite state machine (FSM) that:
+\begin{itemize}
+  \item Waits for inputs \texttt{a} and \texttt{b}
+  \item Repeatedly performs subtraction based on comparison
+  \item Exits when \texttt{a == b} and writes the result
+\end{itemize}
+
+Run Bambu to synthesize this function (from the directory containing \texttt{gcd.c}):
+\begin{lstlisting}[style=bashstyle]
+./bambu-0.9.7.AppImage gcd.c --top-fname=gcd
+\end{lstlisting}
+
+Outputs typically include:
+\begin{itemize}
+  \item Generated Verilog (e.g., \texttt{gcd.v})
+  \item Synthesis reports (latency, resource usage, FSM / datapath breakdown)
+  \item Optional intermediate files (JSON, graphs)
+\end{itemize}
+
+\subsection{What to inspect in the generated RTL}
+\begin{itemize}
+  \item \textbf{Control FSM:} Implements the \texttt{while} loop and branching logic. Look for state transitions that correspond to the loop condition (\texttt{a != b}) and the conditional subtraction.
+  \item \textbf{Datapath operators:} Two subtraction operations (\texttt{a - b} and \texttt{b - a}), comparison units (\texttt{a > b}, \texttt{a == b}), and registers to hold \texttt{a} and \texttt{b}.
+  \item \textbf{Interface signals:} Top-level wrapper for the synthesized function, including \texttt{start}, \texttt{done}, clock, and reset signals.
+  \item \textbf{Performance metrics:} Reported latency (cycles to compute GCD), area (operators/registers), and memory/resource usage.
+\end{itemize}
+
+\textbf{Note:} The GCD algorithm has \textit{data-dependent latency} — the number of iterations (and thus clock cycles) depends on the input values. HLS reports the worst-case or average latency based on its analysis.
+
+\subsection{Verification workflow}
+\begin{enumerate}
+  \item Simulate the original C code with test vectors (e.g., GCD(48, 18) should return 6).
+  \item Simulate the generated Verilog using Icarus Verilog or Verilator with the same inputs.
+  \item Compare outputs to ensure functional equivalence between C and RTL.
+  \item Integrate the generated RTL into your Yosys/OpenROAD/OpenLane flow for synthesis and physical design.
+\end{enumerate}
+
+\textbf{Workshop Continuity:} In the next sections, we will manually write an RTL version of the GCD unit to understand the control/datapath separation, then compare it with the HLS-generated version.
+
+\subsection{Practical tips}
+\begin{itemize}
+  \item Start with small, self-contained functions to learn how constructs map to RTL.
+  \item Prefer static-sized arrays and avoid library calls that Bambu may not support.
+  \item Use Bambu command flags (see its documentation) to tune optimization, latency vs. area, and interface handling.
+  \item Inspect both the generated Verilog and the synthesis reports — the latter often contains valuable optimization hints.
+  \item Automate the HLS→RTL→simulation verification with a small script (shell/tcl) so you can iterate quickly.
+\end{itemize}
+
+\subsection{Exercise}
+\begin{enumerate}
+  \item Install Bambu in your WSL/Ubuntu environment using the steps above.
+  \item Synthesize the GCD function from \texttt{gcd.c} and inspect the generated Verilog.
+  \item Examine the synthesis report: How many states does the FSM have? How many subtractors are instantiated?
+  \item Run a Verilator or Icarus Verilog simulation of the generated RTL with test cases:
+    \begin{itemize}
+      \item GCD(48, 18) $\rightarrow$ expected result: 6
+      \item GCD(100, 25) $\rightarrow$ expected result: 25
+      \item GCD(17, 19) $\rightarrow$ expected result: 1
+    \end{itemize}
+  \item Compare the cycle count for each test case and relate it to the number of loop iterations in the C code.
+\end{enumerate}
+
+\subsection{References and further reading}
+\begin{itemize}
+  \item Bambu HLS documentation and release page (check for the latest AppImage and flags).
+  \item Verilator and Icarus Verilog user guides for simulation.
+  \item Example HLS-to-RTL tutorials and papers — useful to understand common HLS idioms and best practices.
+\end{itemize}

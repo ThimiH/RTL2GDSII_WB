@@ -1,0 +1,130 @@
+% == FILE: modules/module_openroad_physical.tex ==
+% Module: Physical Design Flow using OpenROAD
+
+\subsection{Overview}
+This section covers the complete physical design process using OpenROAD, from floorplanning to routing. We continue with our \textbf{GCD unit golden thread example}, taking the same design we:
+\begin{itemize}
+  \item Generated using HLS (Section 5)
+  \item Manually designed at RTL (Section 6)
+  \item Verified through simulation (Section 7)
+  \item Synthesized to gates with Yosys (Section 8)
+\end{itemize}
+
+We now perform \textbf{place and route} to create a physical layout that can be fabricated. The example uses the \texttt{gcd\_nangate45.tcl} script with the Nangate45 library.
+
+\textbf{Key Continuity:} This is the same GCD algorithm computing greatest common divisor — we're now translating it from abstract gates to concrete silicon geometry.
+
+\subsection{Inputs Required}
+\begin{itemize}
+  \item Synthesized Verilog netlist (\texttt{gcd.v} or \texttt{gcd\_synth.v} from Yosys)
+  \item Constraint file (\texttt{gcd\_nangate45.sdc}) specifying timing requirements
+  \item Technology files:
+    \begin{itemize}
+      \item \texttt{Nangate45\_typ.lib} (timing library)
+      \item \texttt{Nangate45\_stdcell.lef} (standard cell layout)
+      \item \texttt{Nangate45\_tech.lef} (routing rules and metal stack)
+    \end{itemize}
+  \item Flow TCL script: \texttt{gcd\_nangate45.tcl}
+\end{itemize}
+
+\textbf{Important Configuration Step:}
+\begin{itemize}
+  \item If using the default \texttt{gcd\_nangate45.tcl} from OpenROAD examples, you must \textbf{edit the script} to point to YOUR synthesized netlist from Section 8.
+  \item Locate the line: \texttt{read\_verilog <path>/gcd.v}
+  \item Change it to: \texttt{read\_verilog ./gcd\_synth.v} (or the full path to your Yosys output)
+  \item Similarly, ensure the SDC file path points to your constraints file.
+\end{itemize}
+
+\textbf{Note:} The GCD netlist contains the FSM states, datapath registers (a, b, result), subtractor logic, and comparators we designed earlier. OpenROAD will place these gates and route the connections between them.
+
+\subsection{1. Floorplanning and Power Planning}
+\begin{itemize}
+  \item Define die/core area using bottom-left (LX, LY) and top-right (UX, UY) coordinates.
+  \item Generate site rows for cell placement.
+  \item Place IO pins randomly or by constraint.
+  \item Add tap and end-cap cells to prevent latch-up and protect boundaries.
+  \item Generate the Power Distribution Network (PDN) using:
+  \begin{lstlisting}[style=tclstyle]
+source flow_pdn.tcl
+  \end{lstlisting}
+  This builds VDD and VSS grids across metal layers.
+\end{itemize}
+
+\subsection{2. Placement}
+\begin{itemize}
+  \item Perform global placement with congestion estimation.
+  \item Set signal and clock routing layers.
+  \item Repair violations (slew, capacitance, fanout) and resize gates.
+  \item Execute detailed placement to legalize cell positions.
+\end{itemize}
+
+The resulting DEF shows correctly aligned cells within placement rows. You can identify:
+\begin{itemize}
+  \item \textbf{State register flip-flops} for the FSM
+  \item \textbf{Datapath registers} holding \texttt{a}, \texttt{b}, and \texttt{result}
+  \item \textbf{Arithmetic logic} for the subtractors and comparators
+  \item \textbf{Control multiplexers} selecting between operations
+\end{itemize}
+
+\subsection{3. Clock Tree Synthesis (CTS)}
+\begin{itemize}
+  \item Clone and repair clock inverters.
+  \item Build the clock tree with buffer insertion and clustering:
+  \begin{lstlisting}[style=tclstyle]
+clock_tree_synthesis -root clk -buf_list {BUF_X2 BUF_X4}
+  \end{lstlisting}
+  \item Re-run detailed placement for clock buffers.
+  \item Repair setup and hold violations after CTS.
+\end{itemize}
+
+\subsection{4. Routing}
+\textbf{Global Routing:}
+\begin{itemize}
+  \item Generates route guides using global congestion analysis.
+  \item Identifies congestion and antenna issues.
+\end{itemize}
+
+\textbf{Detailed Routing:}
+\begin{itemize}
+  \item Uses multiple threads for performance.
+  \item Creates metal traces respecting DRC rules.
+  \item Inserts filler cells and checks antenna violations.
+  \item Outputs final \texttt{.def}, \texttt{.gds}, and \texttt{.spef} (parasitics) files.
+\end{itemize}
+
+\subsection{5. Parasitic Extraction and Reporting}
+After routing, extract RC data:
+\begin{lstlisting}[style=tclstyle]
+extract_parasitics -rc_file nangate45.rc
+report_timing
+report_power
+\end{lstlisting}
+Generates timing and power summaries, worst slack reports, and congestion maps.
+
+\subsection{Visualization and Checks}
+\begin{itemize}
+  \item Use the GUI command:
+  \begin{lstlisting}[style=bashstyle]
+openroad -gui -log gcd.log -script gcd_nangate45.tcl
+  \end{lstlisting}
+  \item Explore:
+    \begin{itemize}
+      \item Placement density (heatmap)
+      \item Clock tree topology
+      \item Routing congestion and power grid
+    \end{itemize}
+\end{itemize}
+
+\subsection{Summary}
+This module completes the physical design phase in the RTL-to-GDSII flow. You learned how OpenROAD automates floorplanning, placement, CTS, and routing, producing a verified and routed layout ready for DRC/LVS and GDS export.
+
+\textbf{Workshop Golden Thread Complete:} We have now taken the GCD algorithm from:
+\begin{enumerate}
+  \item High-level C code (HLS synthesis)
+  \item Manual RTL design (FSM + Datapath)
+  \item Functional verification (Simulation)
+  \item Gate-level netlist (Logic synthesis with optimization)
+  \item Physical layout (Place and route)
+\end{enumerate}
+
+This unified example demonstrates the complete RTL-to-GDSII flow using a single, coherent design throughout all stages.

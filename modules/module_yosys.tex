@@ -1,0 +1,237 @@
+% == FILE: modules/module_yosys.tex ==
+% Module: Logic Synthesis using Yosys
+
+\subsection{Overview}
+This module introduces \textbf{Yosys Open Synthesis Suite}, an open-source framework for performing RTL synthesis and technology mapping. The tutorial demonstrates installing Yosys, preparing the environment, and synthesizing a Verilog design to a gate-level netlist mapped to a standard cell library.
+
+\subsection{Installing Yosys}
+Yosys runs on Linux-based systems such as Ubuntu or WSL. To install the tool, first ensure all dependencies are available:
+\begin{lstlisting}[style=bashstyle]
+sudo apt-get install build-essential clang bison flex \
+  libreadline-dev gawk tcl-dev libffi-dev git graphviz xdot \
+  pkg-config python3 libboost-system-dev libboost-python-dev \
+  libboost-filesystem-dev zlib1g-dev
+\end{lstlisting}
+
+Clone the official Yosys repository and compile it:
+\begin{lstlisting}[style=bashstyle]
+git clone https://github.com/YosysHQ/yosys.git
+cd yosys
+make
+sudo make install
+\end{lstlisting}
+
+After installation, launch Yosys using:
+\begin{lstlisting}[style=bashstyle]
+yosys
+\end{lstlisting}
+
+\subsection{Library Setup}
+For synthesis mapping, a technology library (\texttt{.lib} file) is required. The tutorial uses the \textbf{Silvaco Open-Cell 45nm FreePDK} library. This library is distributed by Silvaco and requires registration via their website. After completing the form, a download link for the FreePDK45 library is emailed to the user (valid for three days).
+
+Once downloaded, extract the library and locate the NLDM folder containing the Liberty file (e.g., \texttt{FreePDK45\_osu\_stdcells.lib}).
+
+\subsection{Example Design}
+Continuing with our GCD unit as the golden thread example, we will synthesize the manually written RTL from Section 6.
+
+The example Verilog design (\texttt{gcd.v}):
+\begin{lstlisting}[style=verilogstyle]
+module gcd (
+    input clk, rst_n, start,
+    input [15:0] a_in, b_in,
+    output reg done,
+    output reg [15:0] result
+);
+    reg [1:0] state, next_state;
+    reg [15:0] a, b, next_a, next_b;
+    localparam IDLE = 2'b00, CALC = 2'b01, FINISH = 2'b10;
+
+    // State Update
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) state <= IDLE;
+        else {state, a, b} <= {next_state, next_a, next_b};
+    end
+
+    // Next State & Logic
+    always @(*) begin
+        next_state = state; next_a = a; next_b = b; done = 0;
+        case (state)
+            IDLE: begin
+                if (start) begin
+                    next_a = a_in; next_b = b_in; next_state = CALC;
+                end
+            end
+            CALC: begin
+                if (a == b) next_state = FINISH;
+                else if (a > b) next_a = a - b;
+                else next_b = b - a;
+            end
+            FINISH: begin
+                done = 1; result = a; next_state = IDLE;
+            end
+        endcase
+    end
+endmodule
+\end{lstlisting}
+
+\textbf{Key Hardware Structures:}
+\begin{itemize}
+  \item FSM with 3 states (IDLE, CALC, FINISH)
+  \item Two 16-bit subtractors: \texttt{a - b} and \texttt{b - a}
+  \item Comparators: \texttt{a == b} and \texttt{a > b}
+  \item Datapath registers: \texttt{a}, \texttt{b}, and \texttt{result}
+\end{itemize}
+
+\subsection{Yosys TCL Script for Synthesis}
+A sample TCL script (\texttt{yosys\_gcd.tcl}) automates the synthesis process:
+\begin{lstlisting}[style=tclstyle]
+# Read RTL
+read_verilog gcd.v
+
+# Map generic cells to internal library
+techmap
+
+# Map flip-flops using the target technology library
+dfflibmap -liberty FreePDK45_osu_stdcells.lib
+
+# Logic optimization and technology mapping
+abc -liberty FreePDK45_osu_stdcells.lib
+
+# Clean unused wires and cells
+clean
+
+# Write out the synthesized netlist
+write_verilog gcd_synth.v
+
+# Display statistics
+stat
+\end{lstlisting}
+
+\subsection{Running Synthesis in Yosys}
+Start Yosys and run the TCL script:
+\begin{lstlisting}[style=bashstyle]
+yosys> script yosys_gcd.tcl
+\end{lstlisting}
+
+This executes all synthesis steps sequentially and produces a gate-level Verilog file (\texttt{gcd\_synth.v}) mapped to the standard cell library.
+
+\subsection{Generated Netlist Overview}
+The synthesized netlist connects the input and output pins through instantiated logic gates and sequential cells from the technology library. The result typically includes:
+\begin{itemize}
+  \item \textbf{State registers:} Flip-flops for FSM state and datapath registers (\texttt{a}, \texttt{b})
+  \item \textbf{Subtractors:} Two 16-bit subtraction units (or one shared unit if optimized)
+  \item \textbf{Comparators:} Equality and greater-than comparison logic
+  \item \textbf{Control logic:} Multiplexers and gates implementing the FSM transitions
+  \item \textbf{Wire connections:} Routing between standard cells and I/O ports
+\end{itemize}
+
+Inspect the \texttt{stat} output to see cell counts, chip area, and resource utilization.
+
+\subsection{Key Yosys Commands Summary}
+\begin{itemize}
+  \item \textbf{read\_verilog} — Reads the input Verilog source file.
+  \item \textbf{techmap} — Maps high-level RTL to generic logic primitives.
+  \item \textbf{dfflibmap} — Maps flip-flops to library-specific sequential cells.
+  \item \textbf{abc -liberty} — Performs logic optimization and mapping using the provided Liberty file.
+  \item \textbf{clean} — Removes unused cells and wires.
+  \item \textbf{write\_verilog} — Exports the synthesized gate-level Verilog netlist.
+\end{itemize}
+
+\subsection{Exercise}
+\begin{enumerate}
+  \item Install Yosys using the steps above.
+  \item Download and extract the Silvaco FreePDK45 library.
+  \item Synthesize the GCD design using the TCL script.
+  \item Inspect the generated netlist (\texttt{gcd\_synth.v}) and identify:
+    \begin{itemize}
+      \item How many flip-flops are instantiated?
+      \item How many subtractor circuits are present?
+      \item What is the total chip area reported by \texttt{stat}?
+    \end{itemize}
+  \item Visualize the synthesized netlist using \texttt{show} command or \texttt{netlistsvg}.
+\end{enumerate}
+
+\subsection{Summary}
+This tutorial introduced RTL synthesis using Yosys and demonstrated how to map a Verilog design to a real technology library. The generated netlist can be further used for placement, routing, and timing verification in subsequent stages of the RTL-to-GDSII design flow.
+
+\subsection{Logic Optimization using Yosys}
+This section extends the previous Yosys synthesis tutorial by exploring \textbf{logic optimization techniques}, particularly \textbf{resource sharing}. The goal is to understand how Yosys identifies and optimizes redundant hardware resources, thereby minimizing circuit area.
+
+\subsubsection*{Concept of Resource Sharing}
+Resource sharing aims to reuse hardware components when multiple operations can be performed using the same resource at different times.
+
+\textbf{Application to GCD:} Our GCD design contains two 16-bit subtractors:
+\begin{verbatim}
+else if (a > b) 
+    next_a = a - b;
+else 
+    next_b = b - a;
+\end{verbatim}
+
+A naive implementation creates two separate subtraction units. However, since these operations are \textit{mutually exclusive} (only one executes per clock cycle based on the comparison), Yosys can optimize this into:
+\begin{itemize}
+  \item \textbf{One shared 16-bit subtractor}
+  \item \textbf{Input multiplexers} to select operands: (a,b) or (b,a)
+  \item \textbf{Output demultiplexer} to route result to either \texttt{next\_a} or \texttt{next\_b}
+\end{itemize}
+
+This optimization significantly reduces area by replacing two subtractors ($\sim$2N gates for N-bit) with one subtractor plus small muxes ($\sim$N + constant gates).
+
+\subsubsection*{Running Yosys Without Optimization}
+First, synthesize the GCD design without resource sharing:
+\begin{lstlisting}[language=tcl]
+read_verilog gcd.v
+proc; opt; techmap
+dfflibmap -liberty FreePDK45_osu_stdcells.lib
+abc -liberty FreePDK45_osu_stdcells.lib
+clean
+stat
+write_verilog gcd_unopt.v
+\end{lstlisting}
+This generates an unoptimized netlist with two subtractor circuits. Note the chip area reported by \texttt{stat}.
+
+\subsubsection*{Running Yosys with Resource Sharing}
+Next, enable aggressive resource sharing:
+\begin{lstlisting}[language=tcl]
+read_verilog gcd.v
+proc; opt; share -aggressive
+techmap
+dfflibmap -liberty FreePDK45_osu_stdcells.lib
+abc -liberty FreePDK45_osu_stdcells.lib
+clean
+stat
+write_verilog gcd_opt.v
+\end{lstlisting}
+The command \texttt{share -aggressive} enables resource sharing for arithmetic units. The optimized netlist now contains only one subtractor with additional multiplexing logic.
+
+\subsubsection*{Observations}
+Compare the two synthesis runs:
+\begin{itemize}
+  \item \textbf{Cell count:} The optimized design has fewer arithmetic cells
+  \item \textbf{Area:} Reduced by approximately 20-30\% depending on the library
+  \item \textbf{File size:} \texttt{gcd\_opt.v} is smaller than \texttt{gcd\_unopt.v}
+  \item \textbf{Critical path:} May slightly increase due to added mux delay, but area savings usually dominate
+\end{itemize}
+
+\subsubsection*{Visualization}
+Run the following Yosys command to visualize the synthesized netlist:
+\begin{lstlisting}[language=bash]
+show
+\end{lstlisting}
+Compare both netlists to confirm that the optimized design uses a single subtractor with multiplexers on its inputs and outputs.
+
+\subsubsection*{Design Tradeoffs}
+Resource sharing demonstrates a classic hardware design tradeoff:
+\begin{itemize}
+  \item \textbf{Area:} Reduced (fewer arithmetic units)
+  \item \textbf{Latency:} Unchanged (operations still take one cycle each)
+  \item \textbf{Timing:} Slightly worse (additional mux delay in critical path)
+  \item \textbf{Power:} Generally reduced due to smaller area
+\end{itemize}
+
+For the GCD design, resource sharing is almost always beneficial since the algorithm is not timing-critical and area reduction is valuable.
+
+\subsubsection*{Summary}
+This optimization step demonstrates Yosys's ability to perform resource sharing and area reduction automatically. By leveraging these optimization passes, designers can significantly improve hardware efficiency before physical design.
+
+The key insight for our GCD example: \textit{mutually exclusive operations in RTL can share hardware resources, and synthesis tools can detect and exploit this automatically with the right optimization flags.}

@@ -1,0 +1,186 @@
+% == FILE: modules/schedule.tex ==
+% Module: Workshop Schedule
+
+\subsection{Workshop Format}
+This workshop is structured as a progressive, hands-on learning experience combining:
+\begin{itemize}
+  \item Theoretical presentations and tool demonstrations
+  \item Guided practical exercises
+  \item Independent design challenges
+  \item Group discussions and troubleshooting sessions
+\end{itemize}
+
+\subsection{Recommended Schedule (5-Day Format)}
+
+\subsubsection{Day 1: Foundation and Environment Setup}
+\textbf{Morning Session (9:00 AM - 12:00 PM)}
+\begin{itemize}
+  \item Introduction to RTL-to-GDSII flow
+  \item Toolchain overview and architecture
+  \item Linux environment setup (WSL/Ubuntu)
+  \item Installing essential tools and dependencies
+  \item Unix command-line basics
+\end{itemize}
+
+\textbf{Afternoon Session (1:00 PM - 5:00 PM)}
+\begin{itemize}
+  \item TCL scripting fundamentals
+  \item Writing automation scripts
+  \item Tool invocation and flow control
+  \item \textbf{Lab:} Create automated build scripts
+\end{itemize}
+
+\subsubsection{Day 2: Design Entry and Verification}
+\textbf{Morning Session (9:00 AM - 12:00 PM)}
+\begin{itemize}
+  \item High-Level Synthesis with Bambu
+  \item C-to-RTL conversion techniques
+  \item RTL design principles and patterns
+  \item Verilog coding best practices
+  \item \textbf{Lab:} Design and synthesize HLS modules
+\end{itemize}
+
+\textbf{Afternoon Session (1:00 PM - 5:00 PM)}
+\begin{itemize}
+  \item Simulation-based verification
+  \item Installing Icarus Verilog and GTKWave
+  \item Writing effective testbenches
+  \item Code coverage analysis with Covered
+  \item \textbf{Lab:} Verify designs and analyze coverage
+\end{itemize}
+
+\subsubsection{Day 3: Logic Synthesis and Analysis}
+\textbf{Morning Session (9:00 AM - 12:00 PM)}
+\begin{itemize}
+  \item Logic synthesis with Yosys
+  \item Technology library setup (FreePDK45/SkyWater130)
+  \item Synthesis optimization techniques
+  \item Netlist generation and analysis
+  \item \textbf{Lab:} Synthesize RTL designs to gates
+\end{itemize}
+
+\textbf{Afternoon Session (1:00 PM - 5:00 PM)}
+\begin{itemize}
+  \item Static timing analysis with OpenSTA
+  \item Understanding timing constraints
+  \item Setup and hold time verification
+  \item Power analysis fundamentals
+  \item \textbf{Lab:} Perform timing and power analysis
+\end{itemize}
+
+\subsubsection{Day 4: Physical Design with OpenROAD}
+\textbf{Morning Session (9:00 AM - 12:00 PM)}
+\begin{itemize}
+  \item Installing and configuring OpenROAD
+  \item PDK setup and technology files
+  \item Floor planning concepts
+  \item Standard cell placement strategies
+  \item \textbf{Lab:} Floor plan and place a design
+\end{itemize}
+
+\textbf{Afternoon Session (1:00 PM - 5:00 PM)}
+\begin{itemize}
+  \item Clock tree synthesis (CTS)
+  \item Global and detailed routing
+  \item Timing-driven optimization
+  \item Design rule compliance
+  \item \textbf{Lab:} Complete physical implementation
+\end{itemize}
+
+\subsubsection{Day 5: Verification and Sign-off}
+\textbf{Morning Session (9:00 AM - 12:00 PM)}
+\begin{itemize}
+  \item Physical verification overview
+  \item DRC with Magic VLSI
+  \item LVS verification with Netgen
+  \item Parasitic extraction
+  \item \textbf{Lab:} Run DRC/LVS on completed designs
+\end{itemize}
+
+\textbf{Afternoon Session (1:00 PM - 5:00 PM)}
+\begin{itemize}
+  \item GDSII generation and validation
+  \item Layout visualization with KLayout
+  \item Complete design challenge
+  \item Presentation of results
+  \item Workshop wrap-up and Q\&A
+\end{itemize}
+
+\subsection{Alternative Schedule (2-Day Intensive Format)}
+
+\subsubsection{Day 1: Front-End Flow}
+\begin{itemize}
+  \item \textbf{8:00 - 9:00:} Registration and setup
+  \item \textbf{9:00 - 10:30:} Introduction, toolchain, environment setup
+  \item \textbf{10:30 - 12:00:} TCL scripting and automation
+  \item \textbf{12:00 - 1:00:} Lunch break
+  \item \textbf{1:00 - 3:00:} HLS, RTL design, verification
+  \item \textbf{3:00 - 5:00:} Logic synthesis with Yosys
+  \item \textbf{5:00 - 6:00:} Timing analysis with OpenSTA
+\end{itemize}
+
+\subsubsection{Day 2: Back-End Flow}
+\begin{itemize}
+  \item \textbf{8:00 - 9:00:} Day 1 recap and Q\&A
+  \item \textbf{9:00 - 11:00:} OpenROAD installation and floor planning
+  \item \textbf{11:00 - 12:30:} Placement and CTS
+  \item \textbf{12:30 - 1:30:} Lunch break
+  \item \textbf{1:30 - 3:30:} Routing and optimization
+  \item \textbf{3:30 - 5:00:} DRC/LVS verification
+  \item \textbf{5:00 - 6:00:} GDSII generation and final challenge
+\end{itemize}
+
+\subsection{Self-Paced Learning Path}
+For independent study, follow this sequence:
+
+\begin{enumerate}
+  \item \textbf{Week 1:} Environment setup, Unix basics, TCL scripting
+  \item \textbf{Week 2:} HLS and RTL design fundamentals
+  \item \textbf{Week 3:} Verification and simulation techniques
+  \item \textbf{Week 4:} Logic synthesis and timing analysis
+  \item \textbf{Week 5:} OpenROAD installation and physical design basics
+  \item \textbf{Week 6:} Advanced physical design and optimization
+  \item \textbf{Week 7:} Physical verification (DRC/LVS)
+  \item \textbf{Week 8:} Final project - complete RTL-to-GDSII flow
+\end{enumerate}
+
+\subsection{Required Materials}
+Participants should have:
+\begin{itemize}
+  \item Laptop with minimum 8GB RAM (16GB recommended)
+  \item Ubuntu 20.04+ or WSL2 installed
+  \item At least 30GB free disk space
+  \item Stable internet connection for tool downloads
+  \item Text editor (VS Code, vim, or emacs recommended)
+  \item PDF reader for workshop documentation
+\end{itemize}
+
+\subsection{Pre-Workshop Preparation}
+To maximize workshop effectiveness:
+\begin{enumerate}
+  \item Install Ubuntu or WSL before arrival
+  \item Review basic Unix commands
+  \item Refresh Verilog knowledge (optional tutorials provided)
+  \item Download workshop materials from repository
+  \item Complete pre-workshop survey (if applicable)
+\end{enumerate}
+
+\subsection{Post-Workshop Resources}
+After completion, participants will have access to:
+\begin{itemize}
+  \item Complete workshop documentation (PDF)
+  \item All example designs and scripts
+  \item Video recordings (if available)
+  \item Online forum for continued support
+  \item Reference designs and advanced tutorials
+  \item Certificate of completion
+\end{itemize}
+
+\subsection{Support and Contact}
+For workshop-related questions:
+\begin{itemize}
+  \item \textbf{Technical Support:} [Insert email]
+  \item \textbf{Workshop Coordinator:} [Insert contact]
+  \item \textbf{Online Forum:} [Insert URL]
+  \item \textbf{GitHub Repository:} [Insert repository link]
+\end{itemize}

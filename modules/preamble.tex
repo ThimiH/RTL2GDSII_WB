@@ -1,0 +1,95 @@
+% == FILE: modules/preamble.tex ==
+% Shared preamble, packages and custom commands
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{geometry}
+\geometry{margin=25mm}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{booktabs}
+% \usepackage{minted} % commented: minted requires -shell-escape and Pygments; enable only if your Overleaf project allows it
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue}
+
+% Set section numbering depth (include subsections and subsubsections)
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+
+% Define color palette for syntax highlighting
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{commentgreen}{RGB}{34,139,34}
+\definecolor{keywordblue}{RGB}{0,0,255}
+\definecolor{stringred}{RGB}{163,21,21}
+\definecolor{numbercolor}{RGB}{127,0,85}
+\definecolor{gray}{RGB}{100,100,100}
+\definecolor{identifiercolor}{RGB}{0,0,0}
+
+% Base configuration for all listings
+\lstset{
+    backgroundcolor=\color{codebg},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    breakatwhitespace=false,
+    captionpos=b,
+    keepspaces=true,
+    numbers=none,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    frame=single,
+    rulecolor=\color{gray!30},
+    xleftmargin=10pt,
+    xrightmargin=5pt,
+    framexleftmargin=5pt
+}
+
+% Bash/Shell syntax highlighting
+\lstdefinestyle{bashstyle}{
+    language=bash,
+    commentstyle=\color{commentgreen}\itshape,
+    keywordstyle=\color{keywordblue}\bfseries,
+    stringstyle=\color{stringred},
+    morekeywords={sudo, apt-get, git, clone, cd, wget, chmod, iverilog, vvp, gtkwave, covered, make, install, configure, tclsh, exec},
+    morecomment=[l]{\#},
+    alsoletter={-}
+}
+
+% TCL syntax highlighting
+\lstdefinestyle{tclstyle}{
+    language=tcl,
+    commentstyle=\color{commentgreen}\itshape,
+    keywordstyle=\color{keywordblue}\bfseries,
+    stringstyle=\color{stringred},
+    morekeywords={set, puts, foreach, incr, if, else, elseif, proc, return, expr, open, close, read, exec, lset, while, for},
+    morecomment=[l]{\#}
+}
+
+% C/C++ syntax highlighting
+\lstdefinestyle{cstyle}{
+    language=C,
+    commentstyle=\color{commentgreen}\itshape,
+    keywordstyle=\color{keywordblue}\bfseries,
+    stringstyle=\color{stringred},
+    numberstyle=\tiny\color{numbercolor},
+    morecomment=[l]{//},
+    morecomment=[s]{/*}{*/}
+}
+
+% Verilog syntax highlighting
+\lstdefinestyle{verilogstyle}{
+    language=Verilog,
+    commentstyle=\color{commentgreen}\itshape,
+    keywordstyle=\color{keywordblue}\bfseries,
+    stringstyle=\color{stringred},
+    numberstyle=\tiny\color{numbercolor},
+    morekeywords={module, endmodule, input, output, reg, wire, always, initial, begin, end, if, else, posedge, negedge, assign},
+    morecomment=[l]{//},
+    morecomment=[s]{/*}{*/}
+}
+
+% Commands for including PDFs (use \includepdf from pdfpages if needed)
+\usepackage{pdfpages}

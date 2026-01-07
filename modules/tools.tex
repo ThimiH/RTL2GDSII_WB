@@ -1,0 +1,120 @@
+% == FILE: modules/tools.tex ==
+% Module: Toolchain and Workflow Overview
+
+\subsection{Open-Source EDA Toolchain}
+This workshop utilizes a comprehensive set of open-source tools that collectively provide a complete RTL-to-GDSII design flow. The table below summarizes each tool and its role in the design process.
+
+\vspace{0.5cm}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lp{5cm}p{5.5cm}@{}}
+\toprule
+\textbf{Tool} & \textbf{Purpose} & \textbf{Key Features} \\
+\midrule
+\multicolumn{3}{l}{\textbf{\textit{High-Level Synthesis \& RTL Design}}} \\
+\addlinespace[0.1cm]
+Bambu HLS & Convert C/C++ code to RTL (Verilog) & Automated scheduling, resource allocation, interface generation \\
+\addlinespace[0.4cm]
+\multicolumn{3}{l}{\textbf{\textit{Simulation \& Verification}}} \\
+\addlinespace[0.1cm]
+Icarus Verilog & Verilog simulation and compilation & IEEE 1364 compliant, VCD output, fast simulation \\
+GTKWave & Waveform visualization & VCD/FST support, signal search, measurement tools \\
+Covered & Code coverage analysis & Line, toggle, FSM, and branch coverage metrics \\
+\addlinespace[0.4cm]
+\multicolumn{3}{l}{\textbf{\textit{Logic Synthesis}}} \\
+\addlinespace[0.1cm]
+Yosys & RTL synthesis and technology mapping & Optimization passes, Liberty (.lib) support, netlist generation \\
+\addlinespace[0.4cm]
+\multicolumn{3}{l}{\textbf{\textit{Timing \& Power Analysis}}} \\
+\addlinespace[0.1cm]
+OpenSTA & Static timing analysis and power estimation & Setup/hold analysis, delay calculation, power reporting \\
+\addlinespace[0.4cm]
+\multicolumn{3}{l}{\textbf{\textit{Physical Design}}} \\
+\addlinespace[0.1cm]
+OpenROAD & Complete physical design flow & Floor planning, placement, CTS, routing, LEF/DEF support \\
+\addlinespace[0.4cm]
+\multicolumn{3}{l}{\textbf{\textit{Physical Verification}}} \\
+\addlinespace[0.1cm]
+Magic VLSI & Layout editing and DRC verification & Design rule checking, GDSII export, parasitic extraction \\
+Netgen & Layout vs. Schematic (LVS) verification & Hierarchical comparison, mismatch reporting \\
+\bottomrule
+\end{tabular}
+\caption{Open-source EDA tools used in the RTL-to-GDSII workshop}
+\label{tab:tools}
+\end{table}
+
+\vspace{0.5cm}
+
+\subsection{Process Design Kits (PDKs)}
+Standard cell libraries and technology files used in this workshop:
+
+\vspace{0.3cm}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}llp{7cm}@{}}
+\toprule
+\textbf{PDK} & \textbf{Technology} & \textbf{Description} \\
+\midrule
+FreePDK45 & 45nm & Academic predictive PDK from NC State University \\
+SkyWater 130nm & 130nm & Fully open-source PDK from Google \& SkyWater \\
+Nangate45 & 45nm & Open standard cell library for academic use \\
+\bottomrule
+\end{tabular}
+\caption{Process Design Kits (PDKs) and standard cell libraries}
+\label{tab:pdks}
+\end{table}
+
+\vspace{0.5cm}
+
+\subsection{Typical Design Flow}
+The following steps represent the standard RTL-to-GDSII flow using these tools:
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}clp{5.5cm}p{6cm}@{}}
+\toprule
+\textbf{Step} & \textbf{Task} & \textbf{Tools Used} \\
+\midrule
+1 & Design Entry & Write RTL in Verilog or generate from C using Bambu HLS \\
+2 & Functional Verification & Simulate with Icarus Verilog, visualize with GTKWave, measure coverage with Covered \\
+3 & Logic Synthesis & Synthesize with Yosys, map to target technology library \\
+4 & Timing \& Power Analysis & Analyze with OpenSTA, verify constraints \\
+5 & Physical Design & Floor plan, place, CTS, and route with OpenROAD \\
+6 & Physical Verification & DRC with Magic, LVS with Netgen \\
+7 & GDSII Generation & Export final layout using Magic VLSI \\
+\bottomrule
+\end{tabular}
+\caption{RTL-to-GDSII design flow stages}
+\label{tab:flow}
+\end{table}
+
+\subsection{Tool Integration and Automation}
+All tools support automation through:
+\begin{itemize}
+  \item \textbf{TCL Scripts:} Primary scripting language for most EDA tools
+  \item \textbf{Makefiles:} Build process automation
+  \item \textbf{Shell Scripts:} Tool invocation and file management
+\end{itemize}
+
+\subsection{System Requirements}
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lp{11cm}@{}}
+\toprule
+\textbf{Component} & \textbf{Specification} \\
+\midrule
+Operating System & Ubuntu 20.04 LTS or newer (or WSL2 on Windows) \\
+RAM & 8GB minimum, 16GB recommended \\
+Storage & 30GB free disk space \\
+Processor & Multi-core CPU recommended for faster builds \\
+\bottomrule
+\end{tabular}
+\caption{Minimum system requirements}
+\label{tab:requirements}
+\end{table}

@@ -1,0 +1,55 @@
+% == FILE: modules/module_openroad_install.tex ==
+% Module: Installing and Preparing OpenROAD
+
+\subsection{Overview}
+This section explains the installation and setup of \textbf{OpenROAD}, an open-source integrated physical design tool. OpenROAD automates chip layout tasks — including floorplanning, placement, clock tree synthesis, and routing — transforming a synthesized Verilog netlist into a final routed layout.
+
+\subsection{About OpenROAD}
+OpenROAD (Open Rapid Object-oriented Automated Design) provides a complete RTL-to-GDSII physical design flow, handling:
+\begin{itemize}
+  \item Floorplanning and Power Planning
+  \item Placement and Clock Tree Synthesis (CTS)
+  \item Global and Detailed Routing
+  \item Parasitic Extraction and Reporting
+\end{itemize}
+
+\subsection{Installation Steps}
+Execute these commands in a Linux or WSL terminal:
+\begin{lstlisting}[style=bashstyle]
+# Clone repository
+git clone --recursive \
+    https://github.com/The-OpenROAD-Project/OpenROAD.git
+cd OpenROAD
+
+# Install dependencies
+sudo ./etc/DependencyInstaller.sh
+
+# Build OpenROAD
+mkdir build
+cd build
+cmake ..
+make -j$(nproc)
+sudo make install
+\end{lstlisting}
+
+Installation may take about 1–2 hours. After completion, run:
+\begin{lstlisting}[style=bashstyle]
+openroad
+\end{lstlisting}
+
+\subsection{Included Libraries and Examples}
+The OpenROAD repository includes preconfigured libraries:
+\begin{itemize}
+  \item \textbf{Nangate45}
+  \item \textbf{ASAP7}
+  \item \textbf{SkyWater130}
+\end{itemize}
+
+Each library folder provides example Verilog files, constraint files, and TCL scripts for step-by-step flow demonstrations.
+
+\subsection{Next Steps}
+Once installed, users can explore sample scripts in:
+\begin{lstlisting}[style=bashstyle]
+OpenROAD/test/
+\end{lstlisting}
+These include examples such as \texttt{gcd\_nangate45.tcl}, which will be used for chip planning and placement in the following module.

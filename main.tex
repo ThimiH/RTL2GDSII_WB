@@ -1,0 +1,170 @@
+% == FILE: main.tex ==
+% Place this at project root as main.tex
+\documentclass[11pt,a4paper]{article}
+
+% Load shared preamble
+\input{modules/preamble.tex}
+
+\begin{document}
+\begin{titlepage}
+  \centering
+  
+  % Top spacing
+  \vspace*{2cm}
+  
+  % Main title with color box
+  \colorbox{keywordblue!10}{%
+    \parbox{0.9\textwidth}{%
+      \centering
+      \vspace{0.5cm}
+      {\Huge\bfseries\color{keywordblue} RTL to GDSII Workshop}\\[0.3cm]
+      {\LARGE\itshape Using Open-Source Tools}
+      \vspace{0.5cm}
+    }%
+  }
+  
+  \vspace{2cm}
+  
+  % Workshop topics in a box
+  \begin{minipage}{0.85\textwidth}
+    \centering
+    \normalsize
+    \color{gray}
+    \textbf{Complete Workshop Coverage:}\\[0.4cm]
+    \begin{tabular}{@{}p{0.48\textwidth} p{0.48\textwidth}@{}}
+      Introduction to RTL-to-GDSII Flow & Toolchain \& Workflow Overview \\
+      Environment Setup \& Unix Basics & TCL Scripting for EDA \\
+      High-Level Synthesis (Bambu) & RTL Design \& Best Practices \\
+      Simulation \& Verification & Logic Synthesis (Yosys) \\
+      Power Analysis (OpenSTA) & OpenROAD Installation \\
+      Physical Design (OpenROAD) & DRC/LVS/GDSII Verification \\
+    \end{tabular}
+  \end{minipage}
+  
+  \vfill
+  
+  % Decorative line
+  {\color{keywordblue}\rule{0.8\textwidth}{2pt}}
+  
+  \vspace{1cm}
+  
+  % Author and date information
+  \begin{minipage}{0.8\textwidth}
+    \centering
+    {\large\textbf{Workshop Lead:} Your Name}\\[0.5cm]
+    {\normalsize\textbf{Version:} 1.0}\\[0.3cm]
+    {\normalsize\textbf{Date:} \today}
+  \end{minipage}
+  
+  \vspace{1cm}
+  
+  % Bottom decorative line
+  {\color{keywordblue}\rule{0.8\textwidth}{2pt}}
+  
+  \vspace{1cm}
+  
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ------------------------------------------
+% Introduction
+% ------------------------------------------
+\newpage
+\section{Introduction}
+\input{modules/intro.tex}
+
+% ------------------------------------------
+% Toolchain Overview
+% ------------------------------------------
+\newpage
+\section{Toolchain and Workflow}
+\input{modules/tools.tex}
+
+% ------------------------------------------
+% Unix / Environment Setup
+% ------------------------------------------
+\newpage
+\section{Environment and Tools Setup}
+\input{modules/module_unix.tex}
+
+% ------------------------------------------
+% TCL Scripting
+% ------------------------------------------
+\newpage
+\section{Scripting with TCL}
+\input{modules/module_tcl.tex}
+
+% ------------------------------------------
+% High-Level Synthesis
+% ------------------------------------------
+\newpage
+\section{High-Level Synthesis}
+\input{modules/module_hls.tex}
+
+% ------------------------------------------
+% RTL Design
+% ------------------------------------------
+\newpage
+\section{RTL Design and Simulation}
+\input{modules/module_rtl.tex}
+
+% ------------------------------------------
+% Simulation and Verification
+% ------------------------------------------
+\newpage
+\section{Simulation and Verification}
+\input{modules/module_simulation.tex}
+
+% ------------------------------------------
+% Logic Synthesis (Yosys)
+% ------------------------------------------
+\newpage
+\section{Logic Synthesis (Yosys)}
+\input{modules/module_yosys.tex}
+
+% ------------------------------------------
+% Power Analysis (OpenSTA)
+% ------------------------------------------
+\newpage
+\section{Power Analysis (OpenSTA)}
+\input{modules/module_power.tex}
+
+% ------------------------------------------
+% Installing and Preparing OpenROAD
+% ------------------------------------------
+\newpage
+\section{Installing and Preparing OpenROAD}
+\input{modules/module_openroad_install.tex}
+
+% ------------------------------------------
+% Physical Design using OpenROAD
+% ------------------------------------------
+\newpage
+\section{Physical Design using OpenROAD}
+\input{modules/module_openroad_physical.tex}
+
+% ------------------------------------------
+% DRC / LVS / GDSII Verification
+% ------------------------------------------
+\newpage
+\section{DRC / LVS / GDSII Verification}
+\input{modules/module_checks.tex}
+
+% % ------------------------------------------
+% % Workshop Schedule
+% % ------------------------------------------
+% \newpage
+% \section{Workshop Schedule}
+% \input{modules/schedule.tex}
+
+% ------------------------------------------
+% Appendix
+% ------------------------------------------
+\appendix
+\newpage
+\section{Useful Commands and References}
+\input{modules/appendix_commands.tex}
+
+\end{document}

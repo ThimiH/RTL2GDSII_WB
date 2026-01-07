@@ -1,0 +1,237 @@
+% == FILE: modules/module_rtl.tex ==
+% Module: RTL Design and Simulation
+
+\subsection{Overview}
+Register Transfer Level (RTL) design is the abstraction level where digital circuits are described in terms of data flow between registers and the logical operations performed on signals. This module covers RTL design principles and best practices using Verilog.
+
+\subsection{RTL Design Fundamentals}
+RTL design focuses on describing hardware behavior at a level where:
+\begin{itemize}
+  \item Data movement between registers is explicit
+  \item Combinational logic operates on data during clock cycles
+  \item Timing is controlled by clock signals
+  \item Hardware resources are inferred from code structure
+\end{itemize}
+
+\subsection{Verilog RTL Design Basics}
+\subsubsection{Module Declaration}
+Every Verilog design begins with a module declaration:
+\begin{lstlisting}[style=verilogstyle]
+module example_module(
+    input wire clk,
+    input wire rst_n,
+    input wire [7:0] data_in,
+    output reg [7:0] data_out,
+    output wire valid
+);
+  // Module contents
+endmodule
+\end{lstlisting}
+
+\subsubsection{Combinational Logic}
+Use \texttt{assign} statements or \texttt{always @(*)} blocks for combinational logic:
+\begin{lstlisting}[style=verilogstyle]
+// Using assign
+assign sum = a + b;
+
+// Using always block
+always @(*) begin
+    if (select)
+        mux_out = input_a;
+    else
+        mux_out = input_b;
+end
+\end{lstlisting}
+
+\subsubsection{Sequential Logic}
+Use \texttt{always @(posedge clk)} for synchronous sequential logic:
+\begin{lstlisting}[style=verilogstyle]
+always @(posedge clk or negedge rst_n) begin
+    if (!rst_n)
+        counter <= 8'b0;
+    else if (enable)
+        counter <= counter + 1;
+end
+\end{lstlisting}
+
+\subsection{Common RTL Design Patterns}
+\subsubsection{GCD Unit: Manual FSM + Datapath Implementation}
+In the previous section, we used HLS to automatically generate RTL for the GCD algorithm. Now we manually design the same functionality to understand the \textbf{separation of control logic (FSM) and datapath}.
+
+This design demonstrates:
+\begin{itemize}
+  \item A finite state machine to control the computation flow
+  \item Datapath registers (\texttt{a} and \texttt{b}) that hold intermediate values
+  \item Conditional subtraction based on comparison results
+  \item Handshake protocol with \texttt{start} and \texttt{done} signals
+\end{itemize}
+
+\begin{lstlisting}[style=verilogstyle]
+module gcd (
+    input clk, rst_n, start,
+    input [15:0] a_in, b_in,
+    output reg done,
+    output reg [15:0] result
+);
+    reg [1:0] state, next_state;
+    reg [15:0] a, b, next_a, next_b;
+    localparam IDLE = 2'b00, CALC = 2'b01, FINISH = 2'b10;
+
+    // State Update (Sequential Logic)
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) state <= IDLE;
+        else {state, a, b} <= {next_state, next_a, next_b};
+    end
+
+    // Next State & Datapath Logic (Combinational)
+    always @(*) begin
+        next_state = state; 
+        next_a = a; 
+        next_b = b; 
+        done = 0;
+        
+        case (state)
+            IDLE: begin
+                if (start) begin
+                    next_a = a_in; 
+                    next_b = b_in; 
+                    next_state = CALC;
+                end
+            end
+            CALC: begin
+                if (a == b) 
+                    next_state = FINISH;
+                else if (a > b) 
+                    next_a = a - b;
+                else 
+                    next_b = b - a;
+            end
+            FINISH: begin
+                done = 1; 
+                result = a; 
+                next_state = IDLE;
+            end
+        endcase
+    end
+endmodule
+\end{lstlisting}
+
+\subsubsection*{Design Breakdown}
+\begin{itemize}
+  \item \textbf{IDLE State:} Waits for \texttt{start} signal, then loads inputs \texttt{a\_in} and \texttt{b\_in} into registers.
+  \item \textbf{CALC State:} Implements Euclid's algorithm — subtracts the smaller value from the larger until they are equal.
+  \item \textbf{FINISH State:} Asserts \texttt{done} and outputs the GCD result, then returns to IDLE.
+  \item \textbf{Datapath:} Registers \texttt{a} and \texttt{b} store working values; two subtractors (\texttt{a - b} and \texttt{b - a}) perform computation.
+\end{itemize}
+
+\textbf{Key Observation:} This manual design makes the control/datapath split explicit. Later, during synthesis (Yosys), we will see how resource sharing can optimize the two subtraction operations into a single hardware unit.
+
+\subsubsection{Parameterized Counter (Auxiliary Example)}
+For reference, here's a simple parameterized counter that can be used as a building block in larger designs:
+\begin{lstlisting}[style=verilogstyle]
+module counter #(
+    parameter WIDTH = 8
+)(
+    input wire clk,
+    input wire rst_n,
+    input wire enable,
+    output reg [WIDTH-1:0] count,
+    output wire overflow
+);
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            count <= {WIDTH{1'b0}};
+        else if (enable)
+            count <= count + 1;
+    end
+    
+    assign overflow = (count == {WIDTH{1'b1}});
+endmodule
+\end{lstlisting}
+
+
+\subsection{RTL Design Best Practices}
+\begin{enumerate}
+  \item \textbf{Synchronous Reset:} Use synchronous resets unless asynchronous is required
+  \item \textbf{Avoid Latches:} Ensure all paths in combinational blocks are defined
+  \item \textbf{Clock Domain Crossing:} Use proper synchronizers for CDC
+  \item \textbf{Parameterization:} Use parameters for reusable, scalable designs
+  \item \textbf{Naming Conventions:} Use consistent, descriptive signal names
+  \item \textbf{Comments:} Document complex logic and design intent
+  \item \textbf{One Clock Per Module:} Avoid multiple clocks in a single module when possible
+\end{enumerate}
+
+\subsection{Common RTL Coding Mistakes}
+\begin{itemize}
+  \item \textbf{Incomplete sensitivity lists:} Always use \texttt{@(*)} for combinational logic
+  \item \textbf{Mixing blocking and non-blocking:} Use \texttt{<=} for sequential, \texttt{=} for combinational
+  \item \textbf{Unintended latches:} Ensure all variables are assigned in all branches
+  \item \textbf{Race conditions:} Avoid multiple assignments to the same signal
+\end{itemize}
+
+\subsection{RTL Testbench Structure}
+A proper testbench includes clock generation, reset sequencing, stimulus application, and waveform dumping. Here's a template structure:
+\begin{lstlisting}[style=verilogstyle]
+`timescale 1ns/1ps
+
+module tb_example;
+    // Clock and reset
+    reg clk;
+    reg rst_n;
+    
+    // Test signals
+    reg [7:0] data_in;
+    wire [7:0] data_out;
+    
+    // Instantiate DUT (Device Under Test)
+    example_module dut (
+        .clk(clk),
+        .rst_n(rst_n),
+        .data_in(data_in),
+        .data_out(data_out)
+    );
+    
+    // Clock generation
+    initial begin
+        clk = 0;
+        forever #5 clk = ~clk;  // 100MHz clock
+    end
+    
+    // Test sequence
+    initial begin
+        // Initialize signals
+        rst_n = 0;
+        data_in = 8'h00;
+        
+        // Release reset
+        #20 rst_n = 1;
+        
+        // Apply test vectors
+        #10 data_in = 8'hAA;
+        #10 data_in = 8'h55;
+        
+        // End simulation
+        #100 $finish;
+    end
+    
+    // Waveform dump
+    initial begin
+        $dumpfile("waveform.vcd");
+        $dumpvars(0, tb_example);
+    end
+endmodule
+\end{lstlisting}
+
+\textbf{Note:} In the next section, we'll create a specific testbench for the GCD module to verify its functionality with concrete test cases.
+
+\subsection{Exercise}
+\begin{enumerate}
+  \item Implement the GCD module presented above and save it as \texttt{gcd.v}.
+  \item Analyze the design: How many states are used? What signals control state transitions?
+  \item Identify the datapath elements: registers, comparators, and subtractors.
+  \item Create a simple testbench (we'll do this formally in the next section).
+  \item \textbf{Challenge:} Modify the design to use only one subtractor by adding a multiplexer to select operands. How does this affect the FSM?
+\end{enumerate}
+
+\subsection{Summary}
+RTL design is the foundation of digital hardware implementation. Mastering RTL coding practices, understanding synthesis implications, and writing comprehensive testbenches are essential skills for successful ASIC and FPGA design.

@@ -1,0 +1,196 @@
+% == FILE: modules/module_checks.tex ==
+% Module: DRC / LVS / GDSII Verification
+
+\subsection{Overview}
+Physical verification ensures that the fabricated chip will function correctly and meet manufacturing requirements. This module covers Design Rule Checking (DRC), Layout vs. Schematic (LVS) verification, and GDSII generation using open-source tools.
+
+\subsection{Design Rule Checking (DRC)}
+DRC verifies that the layout adheres to the foundry's manufacturing rules:
+\begin{itemize}
+  \item Minimum width and spacing of metal layers
+  \item Via dimensions and enclosure rules
+  \item Well and substrate tap requirements
+  \item Antenna rules for plasma damage prevention
+  \item Density requirements for chemical-mechanical polishing (CMP)
+\end{itemize}
+
+\subsection{Installing Magic VLSI}
+Magic is an open-source layout editor with integrated DRC and extraction capabilities:
+\begin{lstlisting}[style=bashstyle]
+# Install dependencies
+sudo apt-get update
+sudo apt-get install -y m4 tcl-dev tk-dev libcairo2-dev \
+    mesa-common-dev libglu1-mesa-dev
+
+# Clone and build Magic
+git clone https://github.com/RTimothyEdwards/magic.git
+cd magic
+./configure
+make
+sudo make install
+\end{lstlisting}
+
+Verify installation:
+\begin{lstlisting}[style=bashstyle]
+magic --version
+\end{lstlisting}
+
+\subsection{Running DRC with Magic}
+Load a GDSII or DEF file and run DRC:
+\begin{lstlisting}[style=bashstyle]
+magic -d XR -noconsole -dnull design.gds
+\end{lstlisting}
+
+In the Magic TCL console:
+\begin{lstlisting}[style=tclstyle]
+# Load technology file
+tech load sky130A
+
+# Load design
+gds read design.gds
+
+# Run DRC
+drc check
+drc why
+
+# Generate DRC report
+drc catchup
+drc listall why > drc_report.txt
+\end{lstlisting}
+
+\subsection{Layout vs. Schematic (LVS)}
+LVS verification confirms that the physical layout matches the intended circuit netlist.
+
+\subsubsection{Installing Netgen}
+Netgen performs circuit-level netlist comparison:
+\begin{lstlisting}[style=bashstyle]
+# Clone and build Netgen
+git clone https://github.com/RTimothyEdwards/netgen.git
+cd netgen
+./configure
+make
+sudo make install
+\end{lstlisting}
+
+\subsubsection{Running LVS}
+Compare layout-extracted netlist with schematic netlist:
+\begin{lstlisting}[style=bashstyle]
+netgen -batch lvs "layout.spice design" \
+    "schematic.spice design" \
+    sky130A_setup.tcl lvs_report.txt
+\end{lstlisting}
+
+Example LVS TCL script:
+\begin{lstlisting}[style=tclstyle]
+# Load technology setup
+source sky130A_setup.tcl
+
+# Read layout netlist
+readnet spice layout.spice
+
+# Read schematic netlist  
+readnet spice schematic.spice
+
+# Run LVS comparison
+lvs "layout.spice design" "schematic.spice design" \
+    sky130A_setup.tcl lvs_output.txt
+
+# Check results
+puts "LVS Complete"
+quit
+\end{lstlisting}
+
+\subsection{GDSII Generation}
+GDSII is the industry-standard format for IC layout data.
+
+\subsubsection{Exporting GDSII from Magic}
+\begin{lstlisting}[style=tclstyle]
+# In Magic TCL console
+gds write design.gds
+\end{lstlisting}
+
+\subsubsection{Converting DEF to GDSII}
+If starting from DEF format (from OpenROAD):
+\begin{lstlisting}[style=bashstyle]
+magic -T sky130A.tech -dnull -noconsole << EOF
+def read design.def
+gds write design.gds
+quit
+EOF
+\end{lstlisting}
+
+\subsection{GDSII Verification Steps}
+\begin{enumerate}
+  \item \textbf{Layer Verification:} Ensure all required layers are present
+  \item \textbf{Hierarchy Check:} Verify cell hierarchy is correct
+  \item \textbf{Boundary Check:} Confirm chip boundaries are defined
+  \item \textbf{Text Labels:} Verify port and net labels
+  \item \textbf{File Integrity:} Check GDSII file is not corrupted
+\end{enumerate}
+
+\subsection{Viewing GDSII Files}
+Use KLayout for GDSII visualization:
+\begin{lstlisting}[style=bashstyle]
+# Install KLayout
+sudo apt-get install klayout
+
+# View GDSII
+klayout design.gds
+\end{lstlisting}
+
+\subsection{Parasitic Extraction}
+Extract resistance and capacitance from layout:
+\begin{lstlisting}[style=tclstyle]
+# In Magic console
+extract all
+ext2spice lvs
+ext2spice cthresh 0.01
+ext2spice rthresh 0.01
+ext2spice
+\end{lstlisting}
+
+This generates a SPICE netlist with parasitics for post-layout simulation.
+
+\subsection{Common DRC Violations}
+\begin{itemize}
+  \item \textbf{Minimum spacing:} Metal tracks too close together
+  \item \textbf{Minimum width:} Wires thinner than allowed
+  \item \textbf{Enclosure:} Via not properly enclosed by metal
+  \item \textbf{Density:} Metal density outside acceptable range
+  \item \textbf{Antenna:} Long routing causing plasma damage risk
+\end{itemize}
+
+\subsection{Common LVS Errors}
+\begin{itemize}
+  \item \textbf{Missing nets:} Layout missing connections from schematic
+  \item \textbf{Device mismatch:} Different number of transistors
+  \item \textbf{Swapped pins:} Incorrectly connected terminals
+  \item \textbf{Shorted nets:} Unintended connections in layout
+  \item \textbf{Size mismatch:} Device dimensions differ from schematic
+\end{itemize}
+
+\subsection{Sign-off Checklist}
+Before tape-out, verify:
+\begin{enumerate}
+  \item All DRC violations resolved
+  \item LVS comparison passes cleanly
+  \item Timing closure achieved (setup and hold)
+  \item Power analysis shows acceptable consumption
+  \item Electromigration rules satisfied
+  \item IR drop within specifications
+  \item GDSII file format validated
+  \item Layer map confirmed with foundry
+\end{enumerate}
+
+\subsection{Exercise}
+\begin{enumerate}
+  \item Load a sample design in Magic and run DRC
+  \item Fix common DRC violations
+  \item Extract netlist from layout
+  \item Perform LVS comparison
+  \item Generate final GDSII file
+  \item View GDSII in KLayout and verify layers
+\end{enumerate}
+
+\subsection{Summary}
+Physical verification is the final gatekeeper before fabrication. DRC ensures manufacturability, LVS confirms functional correctness, and proper GDSII generation provides the foundry with accurate layout data. Mastering these verification steps is critical for successful chip tape-out.

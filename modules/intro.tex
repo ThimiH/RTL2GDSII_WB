@@ -1,0 +1,80 @@
+% == FILE: modules/intro.tex ==
+% Module: Introduction to RTL-to-GDSII Flow
+
+\subsection{Overview}
+The RTL-to-GDSII (Register Transfer Level to Graphic Data Stream Information Interchange) flow is the complete process of transforming a high-level hardware description into a physical layout ready for semiconductor fabrication. This workshop provides hands-on experience with open-source tools that enable this transformation.
+
+\subsection{What is RTL-to-GDSII?}
+The RTL-to-GDSII flow encompasses several critical stages:
+
+\begin{enumerate}
+  \item \textbf{RTL Design} -- Hardware description using languages like Verilog or VHDL
+  \item \textbf{Verification} -- Functional simulation and validation
+  \item \textbf{Synthesis} -- Conversion of RTL to gate-level netlist
+  \item \textbf{Floor Planning} -- Arrangement of major functional blocks
+  \item \textbf{Placement} -- Positioning of standard cells
+  \item \textbf{Clock Tree Synthesis} -- Distribution of clock signals
+  \item \textbf{Routing} -- Creation of metal interconnections
+  \item \textbf{Verification} -- Physical verification (DRC, LVS, timing)
+  \item \textbf{GDSII Generation} -- Final layout for fabrication
+\end{enumerate}
+
+\subsection{Why Open-Source Tools?}
+Open-source EDA (Electronic Design Automation) tools have revolutionized hardware design by:
+
+\begin{itemize}
+  \item \textbf{Democratizing Access} -- Making chip design accessible to students, researchers, and small companies
+  \item \textbf{Transparency} -- Allowing users to understand and modify tool behavior
+  \item \textbf{Cost Reduction} -- Eliminating expensive licensing fees
+  \item \textbf{Community Support} -- Fostering collaboration and rapid innovation
+  \item \textbf{Educational Value} -- Providing learning opportunities without financial barriers
+\end{itemize}
+
+\subsection{Workshop Objectives}
+By the end of this workshop, participants will be able to:
+
+\begin{itemize}
+  \item Set up and configure a complete open-source RTL-to-GDSII toolchain
+  \item Design and verify digital circuits using Verilog
+  \item Perform logic synthesis using Yosys
+  \item Conduct physical design using OpenROAD
+  \item Verify designs using open-source verification tools
+  \item Generate GDSII files ready for fabrication
+  \item Automate design flows using TCL scripting
+\end{itemize}
+
+\subsection{Target Audience}
+This workshop is designed for:
+
+\begin{itemize}
+  \item Digital design engineers transitioning to open-source tools
+  \item Graduate students studying VLSI design
+  \item Researchers exploring hardware design automation
+  \item Educators preparing curriculum for chip design courses
+  \item Hobbyists interested in semiconductor design
+\end{itemize}
+
+\subsection{Prerequisites}
+Participants should have:
+
+\begin{itemize}
+  \item Basic understanding of digital logic design
+  \item Familiarity with Verilog or VHDL
+  \item Linux command-line experience (basic level)
+  \item Access to a Linux system (native or WSL)
+  \item At least 20GB of free disk space for tools and libraries
+\end{itemize}
+
+\subsection{Workshop Structure}
+The workshop follows a progressive learning path:
+
+\begin{enumerate}
+  \item Environment setup and foundational tools
+  \item Scripting and automation techniques
+  \item Front-end design (HLS, RTL, verification)
+  \item Synthesis and optimization
+  \item Physical design and implementation
+  \item Verification and sign-off
+\end{enumerate}
+
+Each module includes theoretical background, practical examples, hands-on exercises, and real-world design considerations.

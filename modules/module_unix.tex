@@ -1,0 +1,56 @@
+% == FILE: modules/module_unix.tex ==
+% Module: Unix & Environment Setup (for RTL to GDSII flow)
+
+\subsection{Overview}
+This section introduces the initial setup and fundamental Unix commands necessary before starting the RTL-to-GDSII design flow. Understanding basic shell operations is essential for handling design files, toolchains, and automation scripts throughout the open-source VLSI design environment.
+
+\subsection{Setting up a Unix Environment}
+For VLSI design, a Unix-based system is preferred. Windows users can enable a compatible environment using Windows Subsystem for Linux (WSL):
+\begin{lstlisting}[style=bashstyle]
+wsl --install
+\end{lstlisting}
+After installation, reboot the system, create a username and password, and open the Ubuntu terminal to access a Linux shell environment.
+
+\subsection{Basic Unix Commands}
+Below is a list of essential Unix commands and their purposes in the design workflow:
+\begin{itemize}
+  \item \textbf{ls} – List all files and directories in the current working directory.
+  \item \textbf{cd} – Change directories within the file system.
+  \item \textbf{pwd} – Print the current working directory path.
+  \item \textbf{mkdir} – Create new directories for organizing design projects.
+  \item \textbf{mv} – Move or rename files and directories.
+  \item \textbf{cp} – Copy files and directories.
+  \item \textbf{touch} – Create an empty file (useful for starting scripts or testbenches).
+  \item \textbf{rm} – Remove files or directories.
+  \item \textbf{cat} – Display file contents directly in the terminal.
+  \item \textbf{which} – Show the path of an executable command.
+  \item \textbf{man} – Access the manual page for a command to view usage details.
+  \item \textbf{sudo} – Execute commands with superuser privileges (e.g., system updates).
+  \item \textbf{du} – Check disk usage by files or directories.
+  \item \textbf{df} – Display available disk space in the system.
+  \item \textbf{ps} – Show active processes currently running.
+  \item \textbf{top} – Display a dynamic real-time system resource monitor.
+  \item \textbf{bg} – Move a stopped process to the background.
+  \item \textbf{fg} – Bring a background process to the foreground.
+  \item \textbf{history} – Display a list of recently executed commands.
+  \item \textbf{whoami} – Display the username of the current user.
+\end{itemize}
+
+\subsection{Practical Application in VLSI Flow}
+These commands are foundational for:
+\begin{itemize}
+  \item Navigating directories containing RTL, synthesis, and layout files.
+  \item Managing input/output netlists and intermediate reports.
+  \item Running synthesis and simulation scripts efficiently.
+  \item Monitoring system performance during computationally heavy tasks such as place-and-route.
+\end{itemize}
+
+\subsection{Exercise}
+\begin{enumerate}
+  \item Set up WSL or a Linux environment on your workstation.
+  \item Practice creating directories for each VLSI design stage (e.g., rtl/, synth/, pnr/, gds/).
+  \item Use the above Unix commands to create, move, and view files within your flow.
+\end{enumerate}
+
+\subsection{Summary}
+A basic understanding of Unix commands is vital for working with open-source tools in the RTL-to-GDSII flow. These skills will streamline automation, debugging, and design management in later stages of this workshop.

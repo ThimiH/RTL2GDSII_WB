@@ -1,0 +1,174 @@
+% == FILE: modules/module_power.tex ==
+% Module: Power Analysis using OpenSTA
+
+\subsection{Overview}
+This module introduces \textbf{power analysis using OpenSTA}, an open-source Static Timing Analysis (STA) tool that also provides capabilities for estimating dynamic and leakage power. Continuing with our golden thread example, we analyze the power consumption of the \textbf{GCD unit} synthesized in Section 8.
+
+\subsection{Requirements}
+Before starting, ensure that:
+\begin{itemize}
+  \item \textbf{OpenSTA} is installed on your system. (Installation details are given in Tutorial 7.)
+  \item You have the following files from previous sections:
+    \begin{itemize}
+      \item \texttt{gcd\_synth.v} – Gate-level netlist from Yosys (Section 8)
+      \item \texttt{gcd.sdc} – Timing constraints file
+      \item \texttt{FreePDK45\_osu\_stdcells.lib} – Technology library used in synthesis
+    \end{itemize}
+\end{itemize}
+
+\subsection{Concepts of Power Dissipation}
+In a CMOS circuit, total power dissipation has two major components:
+\begin{enumerate}
+  \item \textbf{Dynamic Power Dissipation} – due to switching activity.
+  \item \textbf{Static (Leakage) Power Dissipation} – due to leakage currents in transistors.
+\end{enumerate}
+
+Dynamic power can be divided into:
+\begin{itemize}
+  \item \textbf{Internal Power:} Power dissipated within a cell due to charging/discharging of internal capacitances and short-circuit currents during switching.
+  \item \textbf{Switching (External) Power:} Power consumed by charging/discharging external load capacitances driven by the cell.
+\end{itemize}
+
+\subsection{Internal and Switching Power Models}
+Internal power is characterized in the technology library as a Non-Linear Power Model (NLPM).  
+It is typically represented as a two-dimensional lookup table with:
+\begin{itemize}
+  \item Input transition time (slew) as one axis.
+  \item Output capacitance (load) as the other axis.
+\end{itemize}
+
+Each entry in this table corresponds to the \emph{energy consumed per transition}, expressed in femtojoules (fJ).
+
+\subsection{Files Used in this Tutorial}
+\begin{itemize}
+  \item \textbf{Verilog Netlist:} \texttt{gcd\_synth.v} – The synthesized GCD design containing FSM logic, datapath registers, subtractors, and comparators.
+  \item \textbf{SDC File:} \texttt{gcd.sdc} – Defines timing constraints such as clock period, input/output delay, input slew, and output load.
+  \item \textbf{Library:} \texttt{FreePDK45\_osu\_stdcells.lib} – Technology library defining power, delay, and leakage parameters for the standard cells.
+  \item \textbf{TCL Script:} \texttt{gcd\_power.tcl} – Script to execute the power analysis commands.
+\end{itemize}
+
+\subsection{TCL Script Example}
+Create a file \texttt{gcd\_power.tcl} with the following content:
+\begin{lstlisting}[style=tclstyle]
+# Read technology library
+read_lib FreePDK45_osu_stdcells.lib
+
+# Read the synthesized Verilog netlist
+read_verilog gcd_synth.v
+
+# Link instances to library cells
+link_design gcd
+
+# Read timing constraints
+read_sdc gcd.sdc
+
+# Set activity (signal switching probability)
+# Higher activity for datapath due to subtractors
+set_activity 0.2
+
+# Report power
+report_power
+\end{lstlisting}
+
+\subsection{Running the Power Analysis}
+Run OpenSTA using the following commands:
+\begin{lstlisting}[style=bashstyle]
+sta
+source gcd_power.tcl
+\end{lstlisting}
+
+This executes the TCL script, and the tool prints the power report including:
+\begin{itemize}
+  \item Internal power (per instance and total)
+  \item Switching power (per net and total)
+  \item Leakage power (per instance and total)
+  \item Total power consumption
+\end{itemize}
+
+\subsection{Understanding GCD Power Characteristics}
+The GCD design consumes more power than a simple inverter due to:
+
+\textbf{Dynamic Power Contributors:}
+\begin{itemize}
+  \item \textbf{Subtractors:} Two 16-bit subtraction units (or one shared) with high switching activity during CALC state
+  \item \textbf{Comparators:} Equality and greater-than comparison logic switching every cycle
+  \item \textbf{Datapath Registers:} 16-bit registers for \texttt{a} and \texttt{b} updating frequently
+  \item \textbf{FSM State Registers:} Transitioning between IDLE, CALC, and FINISH states
+\end{itemize}
+
+\textbf{Leakage Power Contributors:}
+\begin{itemize}
+  \item More standard cells = higher cumulative leakage
+  \item Arithmetic cells (adders/subtractors) typically have higher leakage than simple logic gates
+  \item All flip-flops contribute to leakage even when idle
+\end{itemize}
+
+\subsection{Power Breakdown Example}
+For a typical GCD implementation with activity factor 0.2 and 100MHz clock:
+
+\textbf{Internal Power:}
+\begin{itemize}
+  \item Each subtractor cell: $\sim$50-100 µW
+  \item Flip-flops (state + datapath): $\sim$20-40 µW total
+  \item Combinational logic: $\sim$30-50 µW
+  \item \textbf{Total Internal:} $\sim$100-200 µW
+\end{itemize}
+
+\textbf{Switching Power:}
+\begin{itemize}
+  \item Depends heavily on net capacitance and toggle rate
+  \item Datapath nets (16-bit buses) contribute significantly
+  \item \textbf{Total Switching:} $\sim$50-100 µW
+\end{itemize}
+
+\textbf{Leakage Power:}
+\begin{itemize}
+  \item FreePDK45 has moderate leakage characteristics
+  \item $\sim$50-100 cells in the design
+  \item \textbf{Total Leakage:} $\sim$10-20 µW
+\end{itemize}
+
+\textbf{Total Power:} $\sim$160-320 µW (varies with activity and technology corner)
+
+\subsection{Impact of Optimization}
+If you synthesized with resource sharing (Section 8), compare power:
+\begin{itemize}
+  \item \textbf{Unoptimized (two subtractors):} Higher dynamic power due to more switching, higher leakage due to more cells
+  \item \textbf{Optimized (one subtractor):} Lower dynamic and leakage power, but added mux power
+  \item \textbf{Net result:} Optimized version typically saves 15-25\% total power
+\end{itemize}
+
+\subsection{Interpretation of Power Report}
+The OpenSTA report will show:
+\begin{itemize}
+  \item \textbf{Per-instance breakdown:} Identify which modules consume the most power (usually subtractors)
+  \item \textbf{Per-net switching:} High-fanout nets (like clock and reset) contribute significantly
+  \item \textbf{Hierarchical view:} If your design has hierarchy, see power per sub-module
+\end{itemize}
+
+Look for:
+\begin{itemize}
+  \item Unexpectedly high power in specific instances (may indicate over-sized cells)
+  \item High switching power on specific nets (may need buffering or optimization)
+  \item Leakage dominated designs (may benefit from power gating or lower-leakage cells)
+\end{itemize}
+
+\subsection{Exercise}
+\begin{enumerate}
+  \item Run power analysis on both optimized and unoptimized GCD netlists. Compare the results.
+  \item Modify the activity factor in the TCL script (try 0.1, 0.3, 0.5) and observe impact on dynamic power.
+  \item Change the clock frequency in the SDC file and re-run analysis. Plot power vs. frequency.
+  \item Identify the top 5 power-consuming instances in the design. What cell types are they?
+  \item \textbf{Challenge:} If you have the HLS-generated netlist, compare its power to your manual RTL version.
+\end{enumerate}
+
+\subsection{Summary}
+This tutorial demonstrated power analysis of the GCD unit using OpenSTA. You learned:
+\begin{itemize}
+  \item How to analyze synthesized netlists for power consumption
+  \item The breakdown of internal, switching, and leakage power
+  \item Why arithmetic-heavy designs like GCD have higher power than simple logic
+  \item The impact of optimization techniques on power consumption
+\end{itemize}
+
+Understanding power consumption early in the design flow helps make informed decisions about optimization, clock frequency, and target technology before investing in physical implementation.

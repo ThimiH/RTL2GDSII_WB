@@ -1,0 +1,243 @@
+% == FILE: modules/module_sta.tex ==
+% Module: Static Timing Analysis using OpenSTA
+
+\subsection{Overview}
+This module introduces \textbf{OpenSTA}, an open-source tool for performing \textbf{Static Timing Analysis (STA)} on gate-level netlists.  
+STA is used to verify that the design meets its timing constraints — setup, hold, and clock requirements — without the need for dynamic simulation.
+
+\subsection{Objectives}
+\begin{itemize}
+  \item Install and configure OpenSTA.
+  \item Perform setup and hold analysis on a synthesized netlist.
+  \item Understand timing reports and interpret slack values.
+\end{itemize}
+
+\subsection{Installing OpenSTA}
+OpenSTA requires basic development tools and libraries. On Ubuntu or WSL, install dependencies and build from source:
+\begin{lstlisting}[language=bash]
+# Clone the OpenSTA repository
+git clone https://github.com/The-OpenROAD-Project/OpenSTA.git
+cd OpenSTA
+mkdir build && cd build
+
+# Configure and compile
+cmake ..
+make
+sudo make install
+\end{lstlisting}
+
+Verify the installation:
+\begin{lstlisting}[language=bash]
+sta
+\end{lstlisting}
+If the STA prompt appears, installation was successful.  
+Use the `exit` command to quit.
+
+\subsection{Files Required for Analysis}
+OpenSTA requires the following four files:
+\begin{itemize}
+  \item \texttt{top.v} – Gate-level Verilog netlist.
+  \item \texttt{top.sdc} – Timing constraint file.
+  \item \texttt{toy.lib} – Technology library file (Liberty format).
+  \item \texttt{test.tcl} – Tcl script to automate the analysis.
+\end{itemize}
+
+\subsection{Example Constraint File (top.sdc)}
+The SDC file defines clocks and I/O delays:
+\begin{lstlisting}[language=tcl]
+create_clock -name CLK -period 1000 [get_ports clk]
+set_input_delay 5 -clock CLK [get_ports a]
+set_input_delay 5 -clock CLK [get_ports b]
+set_output_delay 5 -clock CLK [get_ports out]
+\end{lstlisting}
+
+\subsection{Example TCL Script (test.tcl)}
+The TCL script automates the OpenSTA workflow:
+\begin{lstlisting}[language=tcl]
+# Read library, design, and constraints
+read_liberty toy.lib
+read_verilog top.v
+link_design top
+read_sdc top.sdc
+\end{lstlisting}
+
+Run OpenSTA using:
+\begin{lstlisting}[language=bash]
+sta source test.tcl
+\end{lstlisting}
+
+\subsection{Timing Analysis Commands}
+After loading the design, use these commands for timing verification:
+\begin{lstlisting}[language=tcl]
+# Maximum delay path (setup check)
+report_checks -path_delay max -fields {slew delay time} -format full
+
+# Minimum delay path (hold check)
+report_checks -path_delay min -fields {slew delay time} -format full
+\end{lstlisting}
+
+You can also export results to a text file:
+\begin{lstlisting}[language=tcl]
+report_checks -path_delay max -format full > setup_report.txt
+report_checks -path_delay min -format full > hold_report.txt
+\end{lstlisting}
+
+\subsection{Interpreting the Timing Report}
+A typical setup analysis output includes:
+\begin{itemize}
+  \item \textbf{Startpoint:} Launch flip-flop (e.g., F1).
+  \item \textbf{Endpoint:} Capture flip-flop (e.g., F2).
+  \item \textbf{Clock period:} 1000 ps (from constraint file).
+  \item \textbf{Data arrival time:} Sum of individual gate and wire delays.
+  \item \textbf{Data required time:} Clock period minus setup time.
+  \item \textbf{Slack:} Difference between required and arrival times.
+\end{itemize}
+
+A positive slack indicates no setup violation.  
+If slack is negative, the circuit fails timing and must be optimized.
+
+\subsection{Hold Analysis}
+Hold check ensures data stability between flip-flops on the same clock edge:
+\begin{itemize}
+  \item \textbf{Startpoint:} F2 (launch flop).
+  \item \textbf{Endpoint:} F3 (capture flop).
+  \item \textbf{Hold time:} Extracted from the Liberty file.
+  \item \textbf{Slack:} Data arrival time minus data required time.
+\end{itemize}
+
+Positive hold slack = no violation.
+
+\subsection{Key Observations}
+\begin{itemize}
+  \item Setup and hold checks confirm the design’s timing health.
+  \item All timing data (delays, setup/hold times) are extracted from the Liberty file.
+  \item OpenSTA allows flexible reporting and TCL-based automation.
+\end{itemize}
+
+\subsection{Exercise}
+\begin{enumerate}
+  \item Install OpenSTA and verify the setup using the example project.
+  \item Modify \texttt{top.sdc} to experiment with different clock periods and observe timing slack.
+  \item Create separate reports for setup and hold checks.
+  \item Identify critical paths from the reports.
+\end{enumerate}
+
+\subsection{Summary}
+OpenSTA performs comprehensive static timing verification for gate-level designs.  
+By analyzing maximum and minimum delay paths, it ensures that setup and hold constraints are satisfied before proceeding to placement, routing, and GDSII generation.
+
+\subsection{Technology Library and Constraints}
+
+This section extends the previous tutorial by explaining how delay calculations and static timing results are affected by the \textbf{technology library (Liberty file)} and \textbf{design constraints (SDC)}.  
+We will again use \textbf{OpenSTA} for demonstration.
+
+\subsubsection*{Objective}
+\begin{itemize}
+  \item Understand how NLDM (Nonlinear Delay Model) tables in the technology library determine gate delay.
+  \item Study the impact of constraints such as input transition, output load, and clock uncertainty on timing results.
+  \item Perform practical experiments using OpenSTA to observe delay and slack variations.
+\end{itemize}
+
+\subsection{Nonlinear Delay Model (NLDM) Overview}
+In Liberty (.lib) format, delay between input and output pins of a cell is modeled as a two-dimensional lookup table.  
+The delay depends on:
+\begin{itemize}
+  \item \textbf{Input transition (slew)} – how fast the input signal changes.
+  \item \textbf{Output load capacitance} – the load driven by the output pin.
+\end{itemize}
+
+For example, an inverter cell may have a timing arc defined as:
+
+\begin{verbatim}
+cell (INV) {
+  pin (ZN) {
+    direction : output;
+    related_pin : "A";
+    timing () {
+      cell_rise (delay_template) {
+        index_1 ("0.1, 100"); // input transition
+        index_2 ("0.1, 100"); // output load
+        values ( "184, 200", "190, 210" );
+      }
+    }
+  }
+}
+\end{verbatim}
+
+Here, the delay is tabulated as a function of input slew and output capacitance.  
+For realistic libraries, the tables are larger with many interpolation points.
+
+\subsection{Constraint Types in SDC}
+Key constraint commands used in OpenSTA analysis:
+\begin{itemize}
+  \item \textbf{create\_clock} – Defines the primary clock and its period.
+  \item \textbf{set\_input\_delay} / \textbf{set\_output\_delay} – Specifies external delay margins for I/O ports.
+  \item \textbf{set\_input\_transition} – Defines the input signal slew rate.
+  \item \textbf{set\_load} – Sets the capacitive load for output ports.
+  \item \textbf{set\_clock\_uncertainty} – Models clock jitter or variation to make timing analysis more conservative.
+\end{itemize}
+
+\subsection{Example Experiment}
+Consider a simple design \texttt{test.v} containing one inverter:
+\begin{lstlisting}[language=verilog]
+module top(input A, output out);
+  INV i (.A(A), .ZN(out));
+endmodule
+\end{lstlisting}
+
+And its corresponding constraint file \texttt{test.sdc}:
+\begin{lstlisting}[language=tcl]
+create_clock -name CLK -period 1000
+set_input_delay 5 -clock CLK [get_ports A]
+set_output_delay 5 -clock CLK [get_ports out]
+set_input_transition 0.1 [get_ports A]
+set_load 100 [get_ports out]
+\end{lstlisting}
+
+The input transition and load values correspond to the characterization points in the NLDM table of the toy library.
+
+\subsection{Expected Delay Calculation}
+Referring to the NLDM table for the inverter:
+\begin{itemize}
+  \item Input transition = 0.1 ps (row 1)
+  \item Output load = 100 fF (column 2)
+  \item Delay from input to output = \textbf{80 ps}
+\end{itemize}
+
+Hence, total arrival time at the output:
+\[
+T_{arrival} = T_{input\_delay} + T_{cell\_delay} = 5 + 80 = 85\text{ ps.}
+\]
+Required time (considering 1000 ps clock and 5 ps output delay):
+\[
+T_{required} = 1000 - 5 = 995\text{ ps.}
+\]
+Slack = \(995 - 85 = 910\) ps (positive, no violation).
+
+\subsection{Effect of Changing Constraints}
+\begin{itemize}
+  \item Increasing input transition from 0.1 ps to 100 ps increases delay (e.g., from 80 ps → 200 ps).
+  \item Reducing output load from 100 fF to 0.1 fF decreases delay (e.g., from 200 ps → 4 ps).
+  \item Increasing input delay or output delay reduces available slack.
+  \item Adding clock uncertainty (e.g., 100 ps) decreases required time by the same amount, reducing slack.
+\end{itemize}
+
+\subsection{Practical Observations}
+\begin{itemize}
+  \item Cell delay grows with higher input slew and load capacitance.
+  \item Constraints directly influence setup and hold slack reported by OpenSTA.
+  \item Designers can perform what-if experiments by varying constraint values to study timing sensitivity.
+\end{itemize}
+
+\subsection{Further Reading and References}
+\begin{itemize}
+  \item OpenSTA official documentation: \url{https://github.com/The-OpenROAD-Project/OpenSTA}
+  \item Liberty File Format Reference: \url{https://openroad.readthedocs.io/en/latest/OpenSTA/Liberty.html}
+  \item Synopsys Design Constraints (SDC) Reference: \url{https://www.synopsys.com/support/sdc.html}
+  \item NPTEL Course: VLSI Design Flow – RTL to GDS (Week 8, Dr. Sneh Saurabh)
+\end{itemize}
+
+\subsection{Summary}
+This experiment demonstrated how the delay model in a technology library and design constraints in the SDC file affect static timing analysis.  
+By modifying constraints such as input transition, load, and clock uncertainty, one can observe predictable changes in delay and slack.  
+A strong understanding of these relationships is essential for accurate timing closure in real-world chip design.

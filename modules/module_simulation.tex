@@ -1,0 +1,258 @@
+% == FILE: modules/module_simulation.tex ==
+% Module: Simulation-Based Verification using Icarus Verilog
+
+\subsection{Overview}
+This module introduces simulation-based verification using \textbf{Icarus Verilog}, an open-source Verilog simulation tool. The tutorial demonstrates how to install and use Icarus Verilog, GTKWave for waveform analysis, and the \textbf{Covered} tool for code coverage evaluation.
+
+\subsection{Installation Steps}
+Before starting, ensure that a Linux environment (Ubuntu or WSL) is available.
+
+\subsubsection*{Installing Icarus Verilog}
+\begin{lstlisting}[style=bashstyle]
+# Clone the source repository
+git clone https://github.com/steveicarus/iverilog.git
+cd iverilog
+
+# Install dependencies
+sudo apt-get update
+sudo apt-get install gperf autoconf gcc g++ flex bison make
+
+# Build and install Icarus Verilog
+sh autoconf.sh
+./configure
+make
+sudo make install
+\end{lstlisting}
+After installation, verify with:
+\begin{lstlisting}[style=bashstyle]
+iverilog -v
+\end{lstlisting}
+
+\subsubsection*{Installing GTKWave (Waveform Viewer)}
+\begin{lstlisting}[style=bashstyle]
+sudo apt install gtkwave
+\end{lstlisting}
+Launch with:
+\begin{lstlisting}[style=bashstyle]
+gtkwave
+\end{lstlisting}
+
+\subsubsection*{Installing Covered (Code Coverage Tool)}
+\begin{lstlisting}[style=bashstyle]
+# Clone the Covered repository
+git clone https://github.com/chiphackers/covered.git
+cd covered
+
+# Install dependencies
+sudo apt update
+sudo apt-get install zlib1g-dev tcl8.6 tcl8.6-dev \
+    tk8.6 tk8.6-dev doxygen
+
+# Configure, build, and install
+./configure
+make
+sudo make install
+\end{lstlisting}
+
+\subsection{Simulation Flow Using Icarus Verilog}
+To perform simulation-based verification, follow these steps:
+
+\begin{enumerate}
+  \item Create your design module (e.g., \texttt{gcd.v}).
+  \item Write a corresponding testbench (e.g., \texttt{tb\_gcd.v}).
+  \item Compile the design and testbench:
+\begin{lstlisting}[style=bashstyle]
+iverilog -o gcd_sim gcd.v tb_gcd.v
+\end{lstlisting}
+  \item Run the simulation:
+\begin{lstlisting}[style=bashstyle]
+vvp gcd_sim
+\end{lstlisting}
+  \item The simulation produces a VCD file (e.g., \texttt{gcd.vcd}) containing waveform data.
+  \item Visualize it using GTKWave:
+\begin{lstlisting}[style=bashstyle]
+gtkwave gcd.vcd
+\end{lstlisting}
+\end{enumerate}
+
+\subsection{Example: GCD Unit Testbench}
+Continuing with our golden thread example, we now verify the GCD module designed in the previous section.
+
+The design file \texttt{gcd.v} (already presented in Section 6):
+\begin{lstlisting}[style=verilogstyle]
+module gcd (
+    input clk, rst_n, start,
+    input [15:0] a_in, b_in,
+    output reg done,
+    output reg [15:0] result
+);
+    reg [1:0] state, next_state;
+    reg [15:0] a, b, next_a, next_b;
+    localparam IDLE = 2'b00, CALC = 2'b01, FINISH = 2'b10;
+
+    // State Update
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) state <= IDLE;
+        else {state, a, b} <= {next_state, next_a, next_b};
+    end
+
+    // Next State & Logic
+    always @(*) begin
+        next_state = state; next_a = a; next_b = b; done = 0;
+        case (state)
+            IDLE: begin
+                if (start) begin
+                    next_a = a_in; next_b = b_in; next_state = CALC;
+                end
+            end
+            CALC: begin
+                if (a == b) next_state = FINISH;
+                else if (a > b) next_a = a - b;
+                else next_b = b - a;
+            end
+            FINISH: begin
+                done = 1; result = a; next_state = IDLE;
+            end
+        endcase
+    end
+endmodule
+\end{lstlisting}
+
+Testbench file \texttt{tb\_gcd.v}:
+\begin{lstlisting}[style=verilogstyle]
+`timescale 1ns/1ps
+
+module tb_gcd;
+    reg clk, rst_n, start;
+    reg [15:0] a_in, b_in;
+    wire done;
+    wire [15:0] result;
+
+    // Instantiate the GCD module
+    gcd uut (
+        .clk(clk), 
+        .rst_n(rst_n), 
+        .start(start), 
+        .a_in(a_in), 
+        .b_in(b_in), 
+        .done(done), 
+        .result(result)
+    );
+
+    // Clock generation (10ns period = 100MHz)
+    always #5 clk = ~clk;
+
+    initial begin
+        // Initialize signals
+        clk = 0; 
+        rst_n = 0; 
+        start = 0;
+        
+        // Release reset after 20ns
+        #20 rst_n = 1;
+
+        // Test Case: GCD of 48 and 18 is 6
+        #10 a_in = 48; b_in = 18; start = 1;
+        #10 start = 0;
+        wait(done);
+        $display("GCD(48, 18) = %d (expected 6)", result);
+        
+        // End simulation
+        #50 $finish;
+    end
+    
+    // Waveform dump for GTKWave
+    initial begin
+        $dumpfile("gcd.vcd");
+        $dumpvars(0, tb_gcd);
+    end
+endmodule
+\end{lstlisting}
+
+\subsubsection*{Understanding the Testbench}
+\begin{itemize}
+  \item \textbf{Clock:} Generated with \texttt{always \#5 clk = \textasciitilde clk}, creating a 10ns period (100MHz).
+  \item \textbf{Reset:} Held low for 20ns, then released to initialize the design.
+  \item \textbf{Test Stimulus:} Applies inputs \texttt{a\_in = 48} and \texttt{b\_in = 18} with \texttt{start = 1} for one cycle.
+  \item \textbf{Wait for Completion:} Uses \texttt{wait(done)} to pause until the computation finishes.
+  \item \textbf{Result Display:} Prints the computed GCD value for verification.
+  \item \textbf{VCD Dump:} Records all signal transitions for waveform viewing.
+\end{itemize}
+
+\subsection{Viewing Waveforms}
+Launch GTKWave to inspect signal transitions:
+\begin{lstlisting}[style=bashstyle]
+gtkwave gcd.vcd
+\end{lstlisting}
+The waveform viewer displays:
+\begin{itemize}
+  \item \textbf{Clock (clk):} Regular clock toggling
+  \item \textbf{Reset (rst\_n):} Initial reset pulse
+  \item \textbf{Start:} One-cycle pulse to initiate computation
+  \item \textbf{State:} FSM state transitions (IDLE $\rightarrow$ CALC $\rightarrow$ FINISH)
+  \item \textbf{a and b:} Datapath registers showing subtraction iterations
+  \item \textbf{Done:} Assertion when computation completes
+  \item \textbf{Result:} Final GCD output (should be 6 for inputs 48 and 18)
+\end{itemize}
+
+Observe how the values of \texttt{a} and \texttt{b} change:
+\begin{itemize}
+  \item Cycle 1: a=48, b=18
+  \item Cycle 2: a=30, b=18 (48-18)
+  \item Cycle 3: a=12, b=18 (30-18)
+  \item Cycle 4: a=12, b=6 (18-12)
+  \item Cycle 5: a=6, b=6 (12-6)
+  \item Cycle 6: Done asserted, result=6
+\end{itemize}
+
+\subsection{Code Coverage Using Covered}
+Covered evaluates how well the testbench stimulates the design.
+
+\subsubsection*{Generating Coverage Data}
+\begin{lstlisting}[style=bashstyle]
+covered score -t tb_gcd -v tb_gcd.v -v gcd.v \
+    -vcd gcd.vcd -o gcd.cdd
+\end{lstlisting}
+
+\subsubsection*{Viewing Coverage Report}
+\begin{lstlisting}[style=bashstyle]
+covered report -d v gcd.cdd
+\end{lstlisting}
+The report includes:
+\begin{itemize}
+  \item \textbf{Line coverage:} Which lines of code were executed
+  \item \textbf{Toggle coverage:} Which signals changed value
+  \item \textbf{FSM coverage:} Which state transitions occurred
+  \item \textbf{Branch coverage:} Which conditional branches were taken
+\end{itemize}
+
+\textbf{Analysis:} With only one test case (GCD(48,18)), you may not achieve 100\% coverage. To improve:
+\begin{itemize}
+  \item Add test cases where \texttt{a < b} initially
+  \item Test edge cases: GCD(1,1), GCD(0,N), GCD(N,N)
+  \item Test co-prime numbers: GCD(17,19) = 1
+\end{itemize}
+
+\subsection{Exercise}
+\begin{enumerate}
+  \item Install Icarus Verilog, GTKWave, and Covered (if not already done).
+  \item Simulate the GCD design with the provided testbench and observe the waveform.
+  \item Modify the testbench to add more test cases:
+    \begin{itemize}
+      \item GCD(100, 25) $\rightarrow$ expected: 25
+      \item GCD(17, 19) $\rightarrow$ expected: 1
+      \item GCD(64, 64) $\rightarrow$ expected: 64
+    \end{itemize}
+  \item Generate and interpret coverage reports. What percentage of code is covered?
+  \item \textbf{Challenge:} Add assertions to check that the result is always less than or equal to both inputs.
+\end{enumerate}
+
+\subsection{Summary}
+Simulation-based verification ensures design correctness before physical implementation. Using our GCD example, we demonstrated how to:
+\begin{itemize}
+  \item Write a comprehensive testbench with stimulus and checking
+  \item Visualize signal behavior using GTKWave
+  \item Measure code coverage to ensure thorough verification
+\end{itemize}
+
+In the next section, we will synthesize this same GCD module using Yosys, transforming it from RTL to a gate-level netlist.
